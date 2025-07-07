@@ -7,6 +7,7 @@ module.exports = {
   extends: [
     'eslint:recommended'
   ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module'
@@ -14,7 +15,7 @@ module.exports = {
   rules: {
     'no-console': 'off',
     'no-unused-vars': 'warn',
-    'no-undef': 'error'
+    'no-undef': 'off'
   },
   ignorePatterns: [
     'dist/**',
