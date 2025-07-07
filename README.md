@@ -73,19 +73,26 @@ All databases are **100% open-source** with permissive licenses:
 
 - **PostgreSQL** (PostgreSQL License) - Most popular open-source database
 - **MariaDB** (GPL v2) - MySQL community fork with enhanced features
-- **SQLite** (Public Domain) - Lightweight embedded database
-- **DuckDB** (MIT) - Analytics-focused embedded database
+- **SQLite** (Public Domain) - Lightweight embedded SQL database
+- **DuckDB** (MIT) - Analytics-focused embedded SQL database
 </details>
 
 <details>
-<summary><strong>Time Series Databases (6)</strong></summary>
+<summary><strong>Embedded Databases (1)</strong></summary>
 
-- **InfluxDB 2.x** (MIT/Apache 2.0) - Modern time series with Python integration
-- **InfluxDB 3 Core** (MIT/Apache 2.0) - Modern time series with Python integration
-- **TimescaleDB** (Timescale License) - PostgreSQL-based time series database
-- **QuestDB** (Apache 2.0) - High-performance time series with SQL support
-- **VictoriaMetrics** (Apache 2.0) - Prometheus-compatible metrics database
-- **Apache HoraeDB** (Apache 2.0) - Cloud-native distributed time series database
+- **LevelDB** (BSD) - High-performance key-value storage library
+</details>
+
+<details>
+<summary><strong>Key-Value Databases (1)</strong></summary>
+
+- **Redis** (BSD 3-Clause) - High-performance in-memory key-value store
+</details>
+
+<details>
+<summary><strong>Wide Column Databases (1)</strong></summary>
+
+- **Apache Cassandra** (Apache 2.0) - Distributed wide column store
 </details>
 
 <details>
@@ -97,6 +104,12 @@ All databases are **100% open-source** with permissive licenses:
 </details>
 
 <details>
+<summary><strong>Graph Databases (1)</strong></summary>
+
+- **ArangoDB** (Apache 2.0) - Multi-model database (graph, document, key-value)
+</details>
+
+<details>
 <summary><strong>Search Databases (2)</strong></summary>
 
 - **Meilisearch** (MIT) - Modern full-text search engine
@@ -104,12 +117,14 @@ All databases are **100% open-source** with permissive licenses:
 </details>
 
 <details>
-<summary><strong>Specialized Databases (4)</strong></summary>
+<summary><strong>Time Series Databases (6)</strong></summary>
 
-- **Redis** (BSD 3-Clause) - High-performance in-memory key-value store
-- **Apache Cassandra** (Apache 2.0) - Distributed wide column store
-- **ArangoDB** (Apache 2.0) - Multi-model database (graph, document, key-value)
-- **LevelDB** (BSD) - High-performance key-value storage library
+- **InfluxDB 2.x** (MIT) - Modern time series platform with full features
+- **InfluxDB 3 Core** (MIT/Apache 2.0) - Latest generation time series database
+- **TimescaleDB** (Timescale License) - PostgreSQL-based time series database
+- **QuestDB** (Apache 2.0) - High-performance time series with SQL support
+- **VictoriaMetrics** (Apache 2.0) - Prometheus-compatible metrics database
+- **Apache HoraeDB** (Apache 2.0) - Cloud-native distributed time series database
 </details>
 
 **Total: 19 databases across 8 categories**

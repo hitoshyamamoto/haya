@@ -62,13 +62,13 @@ ${chalk.bold('EXAMPLES')}
 
 ${chalk.bold('SUPPORTED DATABASES')}
   ${chalk.green('SQL:')}           postgresql, mariadb, sqlite, duckdb
+  ${chalk.green('Embedded:')}      leveldb
   ${chalk.green('Key-Value:')}     redis
   ${chalk.green('Wide Column:')}   cassandra
-  ${chalk.green('Time Series:')}   influxdb2, influxdb3, timescaledb, questdb, victoriametrics, horaedb
   ${chalk.green('Vector:')}        qdrant, weaviate, milvus
   ${chalk.green('Graph:')}         arangodb
   ${chalk.green('Search:')}        meilisearch, typesense
-  ${chalk.green('Embedded:')}      sqlite, duckdb, leveldb
+  ${chalk.green('Time Series:')}   influxdb2, influxdb3, timescaledb, questdb, victoriametrics, horaedb
 
 ${chalk.bold('LEARN MORE')}
   Documentation:  ${chalk.cyan('https://github.com/hitoshyamamoto/hayai#readme')}

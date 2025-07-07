@@ -70,7 +70,7 @@ export class DatabaseTemplates {
       name: 'SQLite',
       engine: {
         name: 'sqlite',
-        type: 'embedded',
+        type: 'sql',
         version: '3',
         image: 'alpine:latest',
         ports: [],
@@ -83,7 +83,7 @@ export class DatabaseTemplates {
       name: 'DuckDB',
       engine: {
         name: 'duckdb',
-        type: 'embedded',
+        type: 'sql',
         version: '1.0',
         image: 'alpine:latest',
         ports: [],
