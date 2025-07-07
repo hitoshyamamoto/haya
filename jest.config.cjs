@@ -24,7 +24,7 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts'],
   
   // Module name mapping for ES modules
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   
@@ -104,19 +104,7 @@ module.exports = {
   ],
   
   // Reporter configuration
-  reporters: [
-    'default',
-    ...(process.env.CI === 'true' ? [
-      ['jest-junit', {
-        outputDirectory: 'test-results',
-        outputName: 'junit.xml',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-        ancestorSeparator: ' › ',
-        usePathForSuiteName: true,
-      }]
-    ] : []),
-  ],
+  reporters: ['default'],
   
   // Bail configuration for CI
   bail: process.env.CI === 'true' ? 1 : false,
@@ -159,9 +147,6 @@ module.exports = {
   // Notify configuration
   notify: false,
   notifyMode: 'failure-change',
-  
-  // Test result processor
-  testResultsProcessor: process.env.CI === 'true' ? 'jest-sonar-reporter' : undefined,
   
   // Watch configuration
   watchman: true,
