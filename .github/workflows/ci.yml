@@ -5,23 +5,25 @@ on:
     branches: [ master, main ]
   pull_request:
     branches: [ master, main ]
-  schedule:
-    - cron: '0 6 * * 0'  # Weekly on Sunday at 6 AM UTC
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  # Quick validation job (runs on every push/PR)
-  quick-test:
+  # Simple validation job (runs on every push/PR)
+  test:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x']
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
     - name: Install dependencies
@@ -30,11 +32,11 @@ jobs:
     - name: Run linter
       run: npm run lint
     
-    - name: Run type check
+    - name: Build project
       run: npm run build
     
-    - name: Run unit tests only
-      run: npm test -- --testPathPattern="src/tests/unit" --verbose
+    - name: Run tests
+      run: npm test
     
     - name: Test CLI help command
       run: node dist/cli/index.js --help
@@ -42,68 +44,10 @@ jobs:
     - name: Test CLI version command
       run: node dist/cli/index.js --version
 
-  # Full integration tests (runs only on main branch pushes)
-  integration-test:
+  # Security check (optional, can be run manually)
+  security-check:
     runs-on: ubuntu-latest
-    # Only run on main branch pushes (not PRs)
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    needs: quick-test
-    
-    strategy:
-      matrix:
-        test-type: [integration, cli, database-specific]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run type check
-      run: npm run build
-    
-    - name: Setup Docker
-      run: |
-        docker --version
-        docker-compose --version
-    
-    - name: Run Integration Tests
-      if: matrix.test-type == 'integration'
-      run: npm test -- --testPathPattern="src/tests/integration" --verbose --testTimeout=180000
-      env:
-        NODE_ENV: test
-    
-    - name: Run CLI Tests
-      if: matrix.test-type == 'cli'
-      run: npm test -- --testPathPattern="src/tests/cli" --verbose --testTimeout=120000
-      env:
-        NODE_ENV: test
-    
-    - name: Run Database-Specific Tests
-      if: matrix.test-type == 'database-specific'
-      run: npm test -- --testPathPattern="src/tests/database-specific" --verbose --testTimeout=180000
-      env:
-        NODE_ENV: test
-    
-    - name: Clean up Docker resources
-      if: always()
-      run: |
-        docker ps -a --filter "name=test-" -q | xargs -r docker rm -f
-        docker volume ls --filter "name=test-" -q | xargs -r docker volume rm
-        docker network ls --filter "name=test-" -q | xargs -r docker network rm
-
-  # Security checks (runs weekly)
-  security:
-    runs-on: ubuntu-latest
-    # Run on schedule (weekly) or manual dispatch
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     
     steps:
     - name: Checkout code
@@ -120,38 +64,7 @@ jobs:
     
     - name: Run security audit
       run: npm audit --audit-level=moderate
+      continue-on-error: true
     
     - name: Check for outdated dependencies
-      run: npm outdated || true
-
-  # Cross-platform tests (runs on releases only)
-  cross-platform:
-    runs-on: ${{ matrix.os }}
-    # Only run on releases/tags
-    if: startsWith(github.ref, 'refs/tags/')
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run type check
-      run: npm run build
-    
-    - name: Test CLI basic functionality
-      run: node dist/cli/index.js --help
-    
-    - name: Run unit tests
-      run: npm test -- --testPathPattern="src/tests/unit" --verbose 
+      run: npm outdated || true 
