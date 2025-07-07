@@ -3,14 +3,23 @@ import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { spawn } from 'child_process';
+import chalk from 'chalk';
 import { DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
 import { getConfig, getComposeFilePath, getDataDirectory } from './config.js';
 import { allocatePort, deallocatePort } from './port-manager.js';
+
+interface DockerVerificationResult {
+  isInstalled: boolean;
+  isRunning: boolean;
+  version?: string;
+  error?: string;
+}
 
 export class DockerManager {
   private static instance: DockerManager;
   private instances: Map<string, DatabaseInstance> = new Map();
   private composeFile: ComposeFile | null = null;
+  private dockerVerified: boolean = false;
 
   private constructor() {}
 
@@ -19,6 +28,146 @@ export class DockerManager {
       DockerManager.instance = new DockerManager();
     }
     return DockerManager.instance;
+  }
+
+  private async checkDockerInstallation(): Promise<DockerVerificationResult> {
+    return new Promise((resolve) => {
+      // First check if docker command exists
+      const child = spawn('docker', ['--version'], { stdio: 'pipe' });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      child.on('close', (code) => {
+        if (code !== 0) {
+          resolve({
+            isInstalled: false,
+            isRunning: false,
+            error: 'Docker command not found'
+          });
+          return;
+        }
+        
+        // Docker is installed, now check if daemon is running
+        const versionMatch = stdout.match(/Docker version (\d+\.\d+\.\d+)/);
+        const version = versionMatch ? versionMatch[1] : 'unknown';
+        
+        // Check if Docker daemon is running
+        const pingChild = spawn('docker', ['info'], { stdio: 'pipe' });
+        
+        pingChild.on('close', (pingCode) => {
+          resolve({
+            isInstalled: true,
+            isRunning: pingCode === 0,
+            version,
+            error: pingCode !== 0 ? 'Docker daemon not running' : undefined
+          });
+        });
+        
+        pingChild.on('error', () => {
+          resolve({
+            isInstalled: true,
+            isRunning: false,
+            error: 'Docker daemon not accessible'
+          });
+        });
+      });
+      
+      child.on('error', () => {
+        resolve({
+          isInstalled: false,
+          isRunning: false,
+          error: 'Docker command not found'
+        });
+      });
+    });
+  }
+
+  private showDockerInstallationInstructions(result: DockerVerificationResult): void {
+    console.log(chalk.red('\n❌ Docker Setup Required\n'));
+    
+    if (!result.isInstalled) {
+      console.log(chalk.yellow('🐳 Docker is not installed on your system.'));
+      console.log(chalk.gray('Hayai requires Docker to manage database containers.\n'));
+      
+      console.log(chalk.bold('📦 Installation Instructions:\n'));
+      
+      const platform = process.platform;
+      
+      switch (platform) {
+        case 'darwin': // macOS
+          console.log(chalk.cyan('macOS:'));
+          console.log('  • Download Docker Desktop: https://docs.docker.com/desktop/install/mac-install/');
+          console.log('  • Or install via Homebrew: brew install --cask docker');
+          break;
+          
+        case 'win32': // Windows
+          console.log(chalk.cyan('Windows:'));
+          console.log('  • Download Docker Desktop: https://docs.docker.com/desktop/install/windows-install/');
+          console.log('  • Or install via Chocolatey: choco install docker-desktop');
+          console.log('  • Or install via Winget: winget install Docker.DockerDesktop');
+          break;
+          
+        default: // Linux
+          console.log(chalk.cyan('Linux:'));
+          console.log('  • Ubuntu/Debian: curl -fsSL https://get.docker.com | sh');
+          console.log('  • Fedora: sudo dnf install docker-ce docker-ce-cli containerd.io');
+          console.log('  • Arch: sudo pacman -S docker docker-compose');
+          console.log('  • Or use Docker Desktop: https://docs.docker.com/desktop/install/linux-install/');
+          break;
+      }
+      
+    } else if (!result.isRunning) {
+      console.log(chalk.yellow('🐳 Docker is installed but not running.'));
+      console.log(chalk.gray(`Version: ${result.version}\n`));
+      
+      console.log(chalk.bold('🚀 Start Docker:\n'));
+      
+      const platform = process.platform;
+      
+      switch (platform) {
+        case 'darwin': // macOS
+        case 'win32': // Windows
+          console.log(chalk.cyan('• Start Docker Desktop application'));
+          console.log(chalk.cyan('• Wait for Docker to fully initialize'));
+          break;
+          
+        default: // Linux
+          console.log(chalk.cyan('• sudo systemctl start docker'));
+          console.log(chalk.cyan('• sudo systemctl enable docker  # Enable auto-start'));
+          console.log(chalk.cyan('• Or start Docker Desktop if installed'));
+          break;
+      }
+    }
+    
+    console.log(chalk.yellow('\n💡 After installing/starting Docker, try running your command again.'));
+    console.log(chalk.gray('🔍 Verify Docker: docker --version && docker info\n'));
+  }
+
+  private async verifyDockerSetup(): Promise<void> {
+    if (this.dockerVerified) {
+      return; // Already verified in this session
+    }
+    
+    const result = await this.checkDockerInstallation();
+    
+    if (!result.isInstalled || !result.isRunning) {
+      this.showDockerInstallationInstructions(result);
+      process.exit(1);
+    }
+    
+    // Docker is ready
+    this.dockerVerified = true;
+    
+    console.log(chalk.green(`✅ Docker ${result.version} is ready`));
   }
 
   private async pathExists(filePath: string): Promise<boolean> {
@@ -31,6 +180,9 @@ export class DockerManager {
   }
 
   public async initialize(): Promise<void> {
+    // Verify Docker setup before doing anything else
+    await this.verifyDockerSetup();
+    
     await this.loadExistingInstances();
     await this.loadComposeFile();
   }
@@ -716,4 +868,4 @@ export const getAllDatabases = async (): Promise<DatabaseInstance[]> => {
   const manager = DockerManager.getInstance();
   await manager.initialize();
   return manager.getAllInstances();
-}; 
+};
