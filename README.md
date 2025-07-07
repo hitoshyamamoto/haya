@@ -302,12 +302,6 @@ hayai init -n graph -e arangodb -p 8529 -y
 
 ## 🌟 Why Choose Hayai?
 
-### 🛡️ Security & Reliability
-- **No Deprecated Dependencies** - All dependencies are up-to-date
-- **Zero Vulnerabilities** - Clean `npm audit` results
-- **Secure by Default** - Only trusted, open-source databases
-- **Health Checks** - Automated container monitoring
-
 ### 🎯 Developer Experience
 - **Interactive CLI** - Beautiful prompts with validation
 - **Smart Defaults** - Sensible configuration out of the box
@@ -393,7 +387,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **Docker** - Container platform that makes everything possible
 - **Open-source database communities** - For creating amazing databases
 - **Node.js ecosystem** - For excellent tooling and libraries
-- **Japanese language** - For inspiring our name (速い - hayai)
+- **Professional experience** - Real-world development needs and pain points that inspired this solution
+- **Personal curiosity** - The desire to create my first own project and learn through building
 
 ---
 
