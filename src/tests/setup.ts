@@ -1,7 +1,11 @@
-// Global test setup for Jest
+// Global test setup
 import { jest } from '@jest/globals';
 
-// Extend default timeout for all tests
+// Set up test environment
+process.env.NODE_ENV = 'test';
+process.env.CI = 'true';
+
+// Set test timeout globally
 jest.setTimeout(30000);
 
 // Global test utilities
