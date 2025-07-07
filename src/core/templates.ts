@@ -509,92 +509,92 @@ export class DatabaseTemplates {
       postgresql: {
         license: 'PostgreSQL License (MIT-like)',
         fullyOpenSource: true,
-        notes: 'Totalmente livre e amplamente adotado'
+        notes: 'Completely free and widely adopted'
       },
       mariadb: {
         license: 'GPL v2',
         fullyOpenSource: true,
-        notes: 'Fork do MySQL, mantido pela comunidade'
+        notes: 'MySQL community fork with enhanced features'
       },
       sqlite: {
-        license: 'Domínio Público',
+        license: 'Public Domain',
         fullyOpenSource: true,
-        notes: 'Sem necessidade de licença nem atribuição'
+        notes: 'No license or attribution required'
       },
       duckdb: {
         license: 'MIT',
         fullyOpenSource: true,
-        notes: 'Otimizado para analytics locais'
+        notes: 'Optimized for local analytics'
       },
       redis: {
         license: 'BSD 3-Clause',
         fullyOpenSource: true,
-        notes: 'Totalmente open-source'
+        notes: 'Completely open-source'
       },
       cassandra: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Totalmente open-source'
+        notes: 'Completely open-source'
       },
       qdrant: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Rápido, com API REST e suporte nativo a embeddings'
+        notes: 'Fast with REST API and native embedding support'
       },
       weaviate: {
         license: 'BSD 3-Clause',
         fullyOpenSource: true,
-        notes: 'Requer Docker para instância local'
+        notes: 'Requires Docker for local instance'
       },
       milvus: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Criado para IA e busca semântica'
+        notes: 'Built for AI and semantic search'
       },
       arangodb: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Suporta Graph + Document + Key-Value'
+        notes: 'Supports Graph + Document + Key-Value'
       },
       meilisearch: {
         license: 'MIT',
         fullyOpenSource: true,
-        notes: 'Leve e moderno, ótimo para projetos com TypeScript'
+        notes: 'Lightweight and modern, great for TypeScript projects'
       },
       typesense: {
         license: 'GPL v3',
         fullyOpenSource: true,
-        notes: 'Alternativa moderna ao Meilisearch'
+        notes: 'Modern alternative to Meilisearch'
       },
       leveldb: {
         license: 'BSD',
         fullyOpenSource: true,
-        notes: 'Baixo nível, usado internamente por muitas ferramentas'
+        notes: 'Low-level, used internally by many tools'
       },
       influxdb: {
         license: 'MIT/Apache 2.0',
         fullyOpenSource: true,
-        notes: 'InfluxDB 3 Core - Otimizado para dados recentes (72h), com Python integrado'
+        notes: 'InfluxDB 3 Core - Optimized for recent data (72h), with integrated Python'
       },
       timescaledb: {
         license: 'Timescale License (TSL)',
         fullyOpenSource: false,
-        notes: 'Source-available, permite uso interno, proíbe apenas hospedagem como serviço'
+        notes: 'Source-available, allows internal use, only prohibits hosting as service'
       },
       questdb: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Performance excepcional, SQL nativo, formato Parquet'
+        notes: 'Exceptional performance, native SQL, Parquet format'
       },
       victoriametrics: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Alternativa ao Prometheus, otimizada para métricas e monitoramento'
+        notes: 'Prometheus alternative, optimized for metrics and monitoring'
       },
       horaedb: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
-        notes: 'Apache HoraeDB - Distribuído, cloud-native, em incubação'
+        notes: 'Apache HoraeDB - Distributed, cloud-native, in incubation'
       }
     };
   }

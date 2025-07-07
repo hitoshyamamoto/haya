@@ -32,8 +32,8 @@ export const snapshotCommand = new Command('snapshot')
 
       const spinner = ora(`Creating snapshot...`).start();
 
-      // TODO: Implement actual snapshot creation based on database type
-      // For now, simulate the process
+      // NOTE: Database-specific snapshot implementation pending
+      // Will create actual backups based on database type (pg_dump, mysqldump, etc.)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       spinner.succeed(`Snapshot created successfully`);

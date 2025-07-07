@@ -23,8 +23,8 @@ export const logsCommand = new Command('logs')
       console.log(chalk.cyan(`📋 Logs for '${name}':`));
       console.log(chalk.gray('─'.repeat(50)));
 
-      // TODO: Implement actual Docker logs viewing
-      // For now, show a placeholder
+      // NOTE: Docker logs integration implementation pending
+      // Will use dockerode to stream real-time container logs
       console.log(chalk.yellow('🚧 Docker logs integration coming soon!'));
       console.log(chalk.gray('This will show real-time logs from the database container.'));
       

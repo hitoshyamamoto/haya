@@ -104,7 +104,8 @@ export class DockerManager {
       throw new Error(`Database instance '${name}' not found`);
     }
 
-    // TODO: Implement Docker container start logic
+    // NOTE: Docker container start implementation pending
+    // This will use dockerode to start the actual container
     instance.status = 'running';
     this.instances.set(name, instance);
   }
@@ -115,7 +116,8 @@ export class DockerManager {
       throw new Error(`Database instance '${name}' not found`);
     }
 
-    // TODO: Implement Docker container stop logic
+    // NOTE: Docker container stop implementation pending
+    // This will use dockerode to stop the actual container
     instance.status = 'stopped';
     this.instances.set(name, instance);
   }
@@ -194,8 +196,8 @@ export class DockerManager {
   }
 
   private async loadExistingInstances(): Promise<void> {
-    // TODO: Load instances from persistent storage or compose file
-    // For now, start with empty instances
+    // NOTE: Persistent storage integration pending
+    // Will load instances from compose file or database on restart
     this.instances.clear();
   }
 
