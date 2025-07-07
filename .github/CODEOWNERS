@@ -1,0 +1,24 @@
+# Hayai Database Management CLI - Code Owners
+# This file defines code owners for the Hayai project
+# Code owners are automatically assigned as reviewers for pull requests
+
+# Global ownership - all files require review from the main maintainer
+* @hitoshyamamoto
+
+# Core system files - require extra scrutiny
+/src/core/ @hitoshyamamoto
+/src/cli/ @hitoshyamamoto
+
+# Configuration files
+*.config.* @hitoshyamamoto
+package.json @hitoshyamamoto
+tsconfig.json @hitoshyamamoto
+
+# CI/CD workflows
+/.github/ @hitoshyamamoto
+
+# Database templates - critical for functionality
+/src/core/templates.ts @hitoshyamamoto
+
+# Documentation
+*.md @hitoshyamamoto 
