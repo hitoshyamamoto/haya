@@ -2,9 +2,10 @@ import { readFile, writeFile, access, mkdir, rm } from 'fs/promises';
 import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { spawn } from 'child_process';
 import { DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
 import { getConfig, getComposeFilePath, getDataDirectory } from './config.js';
-import { allocatePort } from './port-manager.js';
+import { allocatePort, deallocatePort } from './port-manager.js';
 
 export class DockerManager {
   private static instance: DockerManager;
@@ -48,8 +49,14 @@ export class DockerManager {
       throw new Error(`Database instance '${name}' already exists`);
     }
 
-    // Allocate port
-    const port = await allocatePort(name, options.port);
+    // Get default port for this engine
+    const defaultPort = this.getDefaultPortForEngine(template.engine.name);
+    
+    // Only allocate port for databases that need them (not embedded)
+    let port = 0;
+    if (defaultPort > 0) {
+      port = await allocatePort(name, options.port);
+    }
     
     // Create data directory
     const dataDir = await getDataDirectory();
@@ -77,6 +84,9 @@ export class DockerManager {
     // Update compose file
     await this.updateComposeFile();
 
+    // Save instances
+    await this.saveInstances();
+
     return instance;
   }
 
@@ -84,6 +94,21 @@ export class DockerManager {
     const instance = this.instances.get(name);
     if (!instance) {
       throw new Error(`Database instance '${name}' not found`);
+    }
+
+    const serviceName = `${name}-db`;
+
+    try {
+      // Stop and remove container
+      await this.executeDockerCompose(['stop', serviceName]);
+      await this.executeDockerCompose(['rm', '-f', serviceName]);
+    } catch (error) {
+      console.warn(`Failed to stop/remove container for '${name}':`, error);
+    }
+
+    // Deallocate port if it was allocated
+    if (instance.port > 0) {
+      await deallocatePort(instance.port);
     }
 
     // Remove from instances
@@ -94,8 +119,9 @@ export class DockerManager {
       await rm(instance.volume, { recursive: true });
     }
 
-    // Update compose file
+    // Update compose file and save instances
     await this.updateComposeFile();
+    await this.saveInstances();
   }
 
   public async startDatabase(name: string): Promise<void> {
@@ -104,10 +130,22 @@ export class DockerManager {
       throw new Error(`Database instance '${name}' not found`);
     }
 
-    // NOTE: Docker container start implementation pending
-    // This will use dockerode to start the actual container
-    instance.status = 'running';
-    this.instances.set(name, instance);
+    // Ensure compose file is up to date
+    await this.updateComposeFile();
+
+    const serviceName = `${name}-db`;
+    
+    try {
+      await this.executeDockerCompose(['up', '-d', serviceName]);
+      instance.status = 'running';
+      this.instances.set(name, instance);
+      await this.saveInstances();
+    } catch (error) {
+      instance.status = 'error';
+      this.instances.set(name, instance);
+      await this.saveInstances();
+      throw new Error(`Failed to start database '${name}': ${error}`);
+    }
   }
 
   public async stopDatabase(name: string): Promise<void> {
@@ -116,21 +154,96 @@ export class DockerManager {
       throw new Error(`Database instance '${name}' not found`);
     }
 
-    // NOTE: Docker container stop implementation pending
-    // This will use dockerode to stop the actual container
-    instance.status = 'stopped';
-    this.instances.set(name, instance);
+    // Ensure compose file exists
+    await this.updateComposeFile();
+
+    const serviceName = `${name}-db`;
+    
+    try {
+      await this.executeDockerCompose(['stop', serviceName]);
+      instance.status = 'stopped';
+      this.instances.set(name, instance);
+      await this.saveInstances();
+    } catch (error) {
+      instance.status = 'error';
+      this.instances.set(name, instance);
+      await this.saveInstances();
+      throw new Error(`Failed to stop database '${name}': ${error}`);
+    }
+  }
+
+  private async executeDockerCompose(args: string[]): Promise<string> {
+    const composeFilePath = await getComposeFilePath();
+    
+    return new Promise((resolve, reject) => {
+      const child = spawn('docker-compose', ['-f', composeFilePath, ...args], {
+        stdio: ['inherit', 'pipe', 'pipe']
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          reject(new Error(`Docker compose failed with code ${code}: ${stderr}`));
+        }
+      });
+
+      child.on('error', (error) => {
+        reject(error);
+      });
+    });
   }
 
   public async startAllDatabases(): Promise<void> {
-    for (const [name] of this.instances) {
-      await this.startDatabase(name);
+    try {
+      // Ensure compose file is up to date
+      await this.updateComposeFile();
+      
+      await this.executeDockerCompose(['up', '-d']);
+      for (const [name, instance] of this.instances) {
+        instance.status = 'running';
+        this.instances.set(name, instance);
+      }
+      await this.saveInstances();
+    } catch (error) {
+      for (const [name, instance] of this.instances) {
+        instance.status = 'error';
+        this.instances.set(name, instance);
+      }
+      await this.saveInstances();
+      throw new Error(`Failed to start databases: ${error}`);
     }
   }
 
   public async stopAllDatabases(): Promise<void> {
-    for (const [name] of this.instances) {
-      await this.stopDatabase(name);
+    try {
+      // Ensure compose file exists
+      await this.updateComposeFile();
+      
+      await this.executeDockerCompose(['stop']);
+      for (const [name, instance] of this.instances) {
+        instance.status = 'stopped';
+        this.instances.set(name, instance);
+      }
+      await this.saveInstances();
+    } catch (error) {
+      for (const [name, instance] of this.instances) {
+        instance.status = 'error';
+        this.instances.set(name, instance);
+      }
+      await this.saveInstances();
+      throw new Error(`Failed to stop databases: ${error}`);
     }
   }
 
@@ -168,16 +281,22 @@ export class DockerManager {
     // Add services for each database instance
     for (const [name, instance] of this.instances) {
       const serviceName = `${name}-db`;
+      const defaultPort = this.getDefaultPortForEngine(instance.engine);
       
-      this.composeFile.services[serviceName] = {
-        name: serviceName,
+      const serviceConfig: any = {
         image: this.getImageForEngine(instance.engine),
-        ports: [`${instance.port}:${this.getDefaultPortForEngine(instance.engine)}`],
         volumes: [`${instance.volume}:${this.getDefaultVolumeForEngine(instance.engine)}`],
         environment: instance.environment,
         restart: config.defaults.restart_policy,
         healthcheck: this.getHealthcheckForEngine(instance.engine),
       };
+
+      // Only add ports for databases that need them (not embedded databases)
+      if (defaultPort > 0) {
+        serviceConfig.ports = [`${instance.port}:${defaultPort}`];
+      }
+
+      this.composeFile.services[serviceName] = serviceConfig;
 
       // Add volume
       this.composeFile.volumes[`${name}-data`] = {
@@ -196,9 +315,39 @@ export class DockerManager {
   }
 
   private async loadExistingInstances(): Promise<void> {
-    // NOTE: Persistent storage integration pending
-    // Will load instances from compose file or database on restart
+    const dataDir = await getDataDirectory();
+    const instancesFile = path.join(dataDir, 'instances.json');
+    
     this.instances.clear();
+    
+    if (await this.pathExists(instancesFile)) {
+      try {
+        const content = await readFile(instancesFile, 'utf-8');
+        const instancesData = JSON.parse(content);
+        
+        for (const [name, instanceData] of Object.entries(instancesData)) {
+          this.instances.set(name, instanceData as DatabaseInstance);
+        }
+      } catch (error) {
+        console.warn('Failed to load existing instances:', error);
+      }
+    }
+  }
+
+  private async saveInstances(): Promise<void> {
+    const dataDir = await getDataDirectory();
+    const instancesFile = path.join(dataDir, 'instances.json');
+    
+    const instancesData: Record<string, DatabaseInstance> = {};
+    for (const [name, instance] of this.instances) {
+      instancesData[name] = instance;
+    }
+    
+    try {
+      await writeFile(instancesFile, JSON.stringify(instancesData, null, 2), 'utf-8');
+    } catch (error) {
+      console.warn('Failed to save instances:', error);
+    }
   }
 
   private async loadComposeFile(): Promise<void> {
@@ -300,7 +449,7 @@ export class DockerManager {
       leveldb: 'alpine:latest',
       // Time Series Databases
       influxdb3: 'influxdb:latest',
-      influxdb2: 'influxdb:latest',
+      influxdb2: 'influxdb:2.7-alpine',
       timescaledb: 'timescale/timescaledb:latest-pg16',
       questdb: 'questdb/questdb:latest',
       victoriametrics: 'victoriametrics/victoria-metrics:latest',

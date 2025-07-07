@@ -1,5 +1,8 @@
 import * as net from 'net';
-import { getConfig } from './config.js';
+import { readFile, writeFile, access } from 'fs/promises';
+import { constants } from 'fs';
+import * as path from 'path';
+import { getConfig, getDataDirectory } from './config.js';
 import { PortAllocation } from './types.js';
 
 export class PortManager {
@@ -19,6 +22,7 @@ export class PortManager {
   public async initialize(): Promise<void> {
     const config = await getConfig();
     this.portRange = config.defaults.port_range;
+    await this.loadAllocations();
   }
 
   public async allocatePort(serviceName: string, preferredPort?: number): Promise<number> {
@@ -28,6 +32,7 @@ export class PortManager {
     if (preferredPort && await this.isPortAvailable(preferredPort)) {
       if (!this.allocatedPorts.has(preferredPort)) {
         this.allocatedPorts.set(preferredPort, serviceName);
+        await this.saveAllocations();
         return preferredPort;
       }
     }
@@ -36,6 +41,7 @@ export class PortManager {
     for (let port = this.portRange.start; port <= this.portRange.end; port++) {
       if (!this.allocatedPorts.has(port) && await this.isPortAvailable(port)) {
         this.allocatedPorts.set(port, serviceName);
+        await this.saveAllocations();
         return port;
       }
     }
@@ -43,8 +49,9 @@ export class PortManager {
     throw new Error(`No available ports in range ${this.portRange.start}-${this.portRange.end}`);
   }
 
-  public deallocatePort(port: number): void {
+  public async deallocatePort(port: number): Promise<void> {
     this.allocatedPorts.delete(port);
+    await this.saveAllocations();
   }
 
   public getPortAllocations(): PortAllocation[] {
@@ -125,6 +132,50 @@ export class PortManager {
       available,
     };
   }
+
+  private async pathExists(filePath: string): Promise<boolean> {
+    try {
+      await access(filePath, constants.F_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async loadAllocations(): Promise<void> {
+    const dataDir = await getDataDirectory();
+    const allocationsFile = path.join(dataDir, 'port-allocations.json');
+    
+    if (await this.pathExists(allocationsFile)) {
+      try {
+        const content = await readFile(allocationsFile, 'utf-8');
+        const allocationsData = JSON.parse(content);
+        
+        this.allocatedPorts.clear();
+        for (const [port, service] of Object.entries(allocationsData)) {
+          this.allocatedPorts.set(parseInt(port), service as string);
+        }
+      } catch (error) {
+        console.warn('Failed to load port allocations:', error);
+      }
+    }
+  }
+
+  private async saveAllocations(): Promise<void> {
+    const dataDir = await getDataDirectory();
+    const allocationsFile = path.join(dataDir, 'port-allocations.json');
+    
+    const allocationsData: Record<string, string> = {};
+    for (const [port, service] of this.allocatedPorts) {
+      allocationsData[port.toString()] = service;
+    }
+    
+    try {
+      await writeFile(allocationsFile, JSON.stringify(allocationsData, null, 2), 'utf-8');
+    } catch (error) {
+      console.warn('Failed to save port allocations:', error);
+    }
+  }
 }
 
 // Convenience functions for global access
@@ -133,9 +184,9 @@ export const allocatePort = async (serviceName: string, preferredPort?: number):
   return await manager.allocatePort(serviceName, preferredPort);
 };
 
-export const deallocatePort = (port: number): void => {
+export const deallocatePort = async (port: number): Promise<void> => {
   const manager = PortManager.getInstance();
-  manager.deallocatePort(port);
+  await manager.deallocatePort(port);
 };
 
 export const getPortAllocations = (): PortAllocation[] => {
