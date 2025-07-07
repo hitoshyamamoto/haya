@@ -1,6 +1,6 @@
 # Development Setup Guide
 
-## Prerequisites
+## 🚀 Hayai v0.4.1 - Development Environment
 
 Before you start working on Hayai, make sure you have the following installed:
 
@@ -8,6 +8,19 @@ Before you start working on Hayai, make sure you have the following installed:
 - **npm** or **yarn**
 - **Docker** (for testing database containers)
 - **Git**
+
+## 📦 Current Database Support (v0.4.1)
+
+Hayai supports **19 databases across 8 technical categories**:
+
+- **SQL (4):** postgresql, mariadb, sqlite, duckdb
+- **Embedded (1):** leveldb  
+- **Key-Value (1):** redis
+- **Wide Column (1):** cassandra
+- **Vector (3):** qdrant, weaviate, milvus
+- **Graph (1):** arangodb
+- **Search (2):** meilisearch, typesense
+- **Time Series (6):** influxdb2, influxdb3, timescaledb, questdb, victoriametrics, horaedb
 
 ## Installation
 

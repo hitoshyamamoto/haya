@@ -1,4 +1,28 @@
-# Contributing to Hayai
+# Contributing to Hayai v0.4.1
+
+Welcome to Hayai! We're building the fastest way to manage local databases with Docker.
+
+## 📦 Database Categories (v0.4.1)
+
+Hayai uses **8 technical categories** based on query interface, not deployment method:
+
+- **SQL (4):** postgresql, mariadb, sqlite, duckdb
+- **Embedded (1):** leveldb  
+- **Key-Value (1):** redis
+- **Wide Column (1):** cassandra
+- **Vector (3):** qdrant, weaviate, milvus
+- **Graph (1):** arangodb
+- **Search (2):** meilisearch, typesense
+- **Time Series (6):** influxdb2, influxdb3, timescaledb, questdb, victoriametrics, horaedb
+
+### Adding New Database Support
+
+When adding a new database:
+1. Categorize by **query interface** (SQL, Graph, etc.) not deployment
+2. Update `src/core/templates.ts` with the new template
+3. Update `src/core/types.ts` if new category needed
+4. Update README.md and CLI help text
+5. Add tests for the new database template
 
 ## Commit Message Guidelines
 
