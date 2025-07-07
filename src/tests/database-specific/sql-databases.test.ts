@@ -306,7 +306,9 @@ describe('SQL Databases Specific Tests', () => {
           await execAsync(`docker exec ${instanceName} psql -U admin -d database -c "INSERT INTO perf_test (data) SELECT 'test' FROM generate_series(1, 1000);"`);
         } else if (engine === 'mariadb') {
           await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "CREATE TABLE database.perf_test (id INT AUTO_INCREMENT PRIMARY KEY, data TEXT);"`);
-          await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "INSERT INTO database.perf_test (data) VALUES ${'(\\'test\\')'.repeat(1000).split('').join(',').replace(/,/g, ',(\\'test\\')').slice(1)}"`);
+          // Generate INSERT statement with multiple VALUES
+          const values = Array(1000).fill("('test')").join(',');
+          await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "INSERT INTO database.perf_test (data) VALUES ${values}"`);
         }
 
         const endTime = Date.now();
