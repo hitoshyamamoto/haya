@@ -9,15 +9,21 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/cli/index.ts",
-    "start": "node dist/cli/index.js",
+    "dev": "tsc && node dist/cli/index.js",
     "test": "jest",
+    "test:unit": "jest --testPathPattern=\"src/tests/unit\" --verbose",
+    "test:integration": "jest --testPathPattern=\"src/tests/integration\" --verbose --testTimeout=180000",
+    "test:cli": "jest --testPathPattern=\"src/tests/cli\" --verbose --testTimeout=120000",
+    "test:database": "jest --testPathPattern=\"src/tests/database-specific\" --verbose --testTimeout=180000",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:cli && npm run test:database",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts",
-    "prepare": "npm run build"
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "lint": "eslint src --ext .ts,.js",
+    "lint:fix": "eslint src --ext .ts,.js --fix",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "prepack": "npm run build"
   },
   "keywords": [
     "database",
