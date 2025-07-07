@@ -308,6 +308,151 @@ export class DatabaseTemplates {
         environment: {},
       },
     });
+
+    // ✅ Time Series Databases (100% Open-Source)
+    this.addTemplate('influxdb', {
+      name: 'InfluxDB 3 Core',
+      engine: {
+        name: 'influxdb',
+        type: 'timeseries',
+        version: '3.0',
+        image: 'influxdb:latest',
+        ports: [8086, 8181],
+        volumes: ['/var/lib/influxdb3'],
+        environment: {
+          INFLUXDB_DB: 'hayai_db',
+          INFLUXDB_ADMIN_USER: 'admin',
+          INFLUXDB_ADMIN_PASSWORD: 'password',
+        },
+        healthcheck: {
+          test: 'curl -f http://localhost:8086/health || exit 1',
+          interval: '10s',
+          timeout: '5s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 8086,
+        image: 'influxdb:latest',
+      },
+      client_sdk: {
+        enabled: true,
+        languages: ['typescript', 'python', 'javascript', 'go'],
+      },
+    });
+
+    this.addTemplate('timescaledb', {
+      name: 'TimescaleDB',
+      engine: {
+        name: 'timescaledb',
+        type: 'timeseries',
+        version: '2.17',
+        image: 'timescale/timescaledb:latest-pg16',
+        ports: [5432],
+        volumes: ['/var/lib/postgresql/data'],
+        environment: {
+          POSTGRES_DB: 'hayai_db',
+          POSTGRES_USER: 'admin',
+          POSTGRES_PASSWORD: 'password',
+        },
+        healthcheck: {
+          test: 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}',
+          interval: '10s',
+          timeout: '5s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 8080,
+        image: 'adminer:4.8.1',
+      },
+      client_sdk: {
+        enabled: true,
+        languages: ['typescript', 'python', 'javascript', 'go', 'rust'],
+      },
+    });
+
+    this.addTemplate('questdb', {
+      name: 'QuestDB',
+      engine: {
+        name: 'questdb',
+        type: 'timeseries',
+        version: '8.3',
+        image: 'questdb/questdb:latest',
+        ports: [9000, 8812, 9009],
+        volumes: ['/var/lib/questdb'],
+        environment: {
+          QUESTDB_DATABASE: 'hayai_db',
+          QUESTDB_USER: 'admin',
+          QUESTDB_PASSWORD: 'password',
+        },
+        healthcheck: {
+          test: 'curl -f http://localhost:9000/status || exit 1',
+          interval: '10s',
+          timeout: '5s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 9000,
+        image: 'questdb/questdb:latest',
+      },
+      client_sdk: {
+        enabled: true,
+        languages: ['typescript', 'python', 'javascript', 'java', 'go'],
+      },
+    });
+
+    this.addTemplate('victoriametrics', {
+      name: 'VictoriaMetrics',
+      engine: {
+        name: 'victoriametrics',
+        type: 'timeseries',
+        version: '1.107',
+        image: 'victoriametrics/victoria-metrics:latest',
+        ports: [8428],
+        volumes: ['/victoria-metrics-data'],
+        environment: {
+          VM_RETENTION_PERIOD: '12',
+          VM_STORAGE_DATA_PATH: '/victoria-metrics-data',
+        },
+        healthcheck: {
+          test: 'wget --no-verbose --tries=1 --spider http://localhost:8428/health || exit 1',
+          interval: '10s',
+          timeout: '5s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 8428,
+        image: 'victoriametrics/victoria-metrics:latest',
+      },
+    });
+
+    this.addTemplate('horaedb', {
+      name: 'Apache HoraeDB',
+      engine: {
+        name: 'horaedb',
+        type: 'timeseries',
+        version: '2.1',
+        image: 'apache/horaedb:latest',
+        ports: [8831, 3307],
+        volumes: ['/opt/horaedb'],
+        environment: {
+          HORAEDB_DATA_DIR: '/opt/horaedb/data',
+        },
+        healthcheck: {
+          test: 'curl -f http://localhost:8831/health || exit 1',
+          interval: '30s',
+          timeout: '10s',
+          retries: 5,
+        },
+      },
+    });
   }
 
   private static addTemplate(key: string, template: DatabaseTemplate): void {
@@ -424,6 +569,31 @@ export class DatabaseTemplates {
         license: 'BSD',
         fullyOpenSource: true,
         notes: 'Baixo nível, usado internamente por muitas ferramentas'
+      },
+      influxdb: {
+        license: 'MIT/Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'InfluxDB 3 Core - Otimizado para dados recentes (72h), com Python integrado'
+      },
+      timescaledb: {
+        license: 'Timescale License (TSL)',
+        fullyOpenSource: false,
+        notes: 'Source-available, permite uso interno, proíbe apenas hospedagem como serviço'
+      },
+      questdb: {
+        license: 'Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'Performance excepcional, SQL nativo, formato Parquet'
+      },
+      victoriametrics: {
+        license: 'Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'Alternativa ao Prometheus, otimizada para métricas e monitoramento'
+      },
+      horaedb: {
+        license: 'Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'Apache HoraeDB - Distribuído, cloud-native, em incubação'
       }
     };
   }

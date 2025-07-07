@@ -1,4 +1,5 @@
-import * as fs from 'fs-extra';
+import { readFile, writeFile, access, mkdir, rm } from 'fs/promises';
+import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
@@ -17,6 +18,15 @@ export class DockerManager {
       DockerManager.instance = new DockerManager();
     }
     return DockerManager.instance;
+  }
+
+  private async pathExists(filePath: string): Promise<boolean> {
+    try {
+      await access(filePath, constants.F_OK);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   public async initialize(): Promise<void> {
@@ -44,7 +54,7 @@ export class DockerManager {
     // Create data directory
     const dataDir = await getDataDirectory();
     const instanceDataDir = path.join(dataDir, name);
-    await fs.ensureDir(instanceDataDir);
+    await mkdir(instanceDataDir, { recursive: true });
 
     // Create database instance
     const instance: DatabaseInstance = {
@@ -80,8 +90,8 @@ export class DockerManager {
     this.instances.delete(name);
 
     // Clean up data directory
-    if (await fs.pathExists(instance.volume)) {
-      await fs.remove(instance.volume);
+    if (await this.pathExists(instance.volume)) {
+      await rm(instance.volume, { recursive: true });
     }
 
     // Update compose file
@@ -180,7 +190,7 @@ export class DockerManager {
       minContentWidth: 20,
     });
 
-    await fs.writeFile(composeFilePath, yamlContent, 'utf-8');
+    await writeFile(composeFilePath, yamlContent, 'utf-8');
   }
 
   private async loadExistingInstances(): Promise<void> {
@@ -192,9 +202,9 @@ export class DockerManager {
   private async loadComposeFile(): Promise<void> {
     const composeFilePath = await getComposeFilePath();
     
-    if (await fs.pathExists(composeFilePath)) {
+    if (await this.pathExists(composeFilePath)) {
       try {
-        const content = await fs.readFile(composeFilePath, 'utf-8');
+        const content = await readFile(composeFilePath, 'utf-8');
         this.composeFile = yaml.parse(content) as ComposeFile;
       } catch (error) {
         console.warn('Failed to load existing compose file:', error);
@@ -247,6 +257,22 @@ export class DockerManager {
       case 'leveldb':
         return `leveldb:///${dbName}`;
       
+      // Time Series Databases
+      case 'influxdb':
+        return `http://localhost:${port}`;
+      
+      case 'timescaledb':
+        return `postgresql://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:${port}/${env.POSTGRES_DB}`;
+      
+      case 'questdb':
+        return `postgresql://admin:quest@localhost:8812/qdb`;
+      
+      case 'victoriametrics':
+        return `http://localhost:${port}`;
+      
+      case 'horaedb':
+        return `http://localhost:${port}`;
+      
       default:
         return `http://localhost:${port}`;
     }
@@ -267,6 +293,12 @@ export class DockerManager {
       sqlite: 'alpine:latest',
       duckdb: 'alpine:latest',
       leveldb: 'alpine:latest',
+      // Time Series Databases
+      influxdb: 'influxdb:latest',
+      timescaledb: 'timescale/timescaledb:latest-pg16',
+      questdb: 'questdb/questdb:latest',
+      victoriametrics: 'victoriametrics/victoria-metrics:latest',
+      horaedb: 'apache/horaedb:latest',
     };
 
     return imageMap[engineName] || 'alpine:latest';
@@ -287,6 +319,12 @@ export class DockerManager {
       sqlite: 0, // No port for embedded
       duckdb: 0, // No port for embedded
       leveldb: 0, // No port for embedded
+      // Time Series Databases
+      influxdb: 8086,
+      timescaledb: 5432,
+      questdb: 9000,
+      victoriametrics: 8428,
+      horaedb: 8831,
     };
 
     return portMap[engineName] || 8080;
@@ -307,6 +345,12 @@ export class DockerManager {
       sqlite: '/data',
       duckdb: '/data',
       leveldb: '/data',
+      // Time Series Databases
+      influxdb: '/var/lib/influxdb3',
+      timescaledb: '/var/lib/postgresql/data',
+      questdb: '/var/lib/questdb',
+      victoriametrics: '/victoria-metrics-data',
+      horaedb: '/opt/horaedb',
     };
 
     return volumeMap[engineName] || '/data';
@@ -374,9 +418,45 @@ export class DockerManager {
         timeout: '5s',
         retries: 5,
       },
+      // Time Series Databases
+      influxdb: {
+        test: 'curl -f http://localhost:8086/health || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      timescaledb: {
+        test: 'pg_isready -U admin -d hayai_db',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      questdb: {
+        test: 'curl -f http://localhost:9000/status || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      victoriametrics: {
+        test: 'wget --no-verbose --tries=1 --spider http://localhost:8428/health || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      horaedb: {
+        test: 'curl -f http://localhost:8831/health || exit 1',
+        interval: '30s',
+        timeout: '10s',
+        retries: 5,
+      },
     };
 
-    return healthcheckMap[engineName];
+    return healthcheckMap[engineName] || {
+      test: 'echo "healthy"',
+      interval: '30s',
+      timeout: '10s',
+      retries: 3,
+    };
   }
 
   public async getComposeFileContent(): Promise<string> {
@@ -396,8 +476,8 @@ export class DockerManager {
     let envContent = '';
 
     // Load existing .env file if it exists
-    if (await fs.pathExists(envPath)) {
-      envContent = await fs.readFile(envPath, 'utf-8');
+    if (await this.pathExists(envPath)) {
+      envContent = await readFile(envPath, 'utf-8');
     }
 
     // Add connection URIs for each database
@@ -428,7 +508,7 @@ export class DockerManager {
       }
     }
 
-    await fs.writeFile(envPath, updatedLines.join('\n'), 'utf-8');
+    await writeFile(envPath, updatedLines.join('\n'), 'utf-8');
   }
 }
 

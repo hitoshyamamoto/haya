@@ -1,29 +1,14 @@
-# Hayai Configuration File
-# This file contains global settings for the Hayai CLI tool
-
-# Default settings
+version: '1.0.0'
+docker:
+  network_name: 'hayai-network'
+  compose_file: 'docker-compose.yml'
+  data_directory: './data'
+logging:
+  level: 'info'
+  file: 'hayai.log'
 defaults:
   port_range:
-    min: 5000
-    max: 9999
-  persistence: true
-  generate_client: false
-  enable_studio: false
-  
-# Database templates directory
-templates_dir: "./templates"
-
-# Docker settings
-docker:
-  compose_file: "docker-compose.yml"
-  network_name: "hayai-network"
-  
-# Studio settings
-studio:
-  port: 8080
-  enabled: false
-  
-# Logging settings
-logging:
-  level: "info"
-  file: "hayai.log" 
+    start: 5000
+    end: 6000
+  volume_driver: 'local'
+  restart_policy: 'unless-stopped' 

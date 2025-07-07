@@ -2,7 +2,7 @@
 
 > Instantly create and manage local databases with one command
 
-Fast, modern CLI tool for managing local SQL, NoSQL, and Vector databases with Docker. Built for backend developers who need quick database instances for development and testing.
+Fast, modern CLI tool for managing local SQL and NoSQL databases with Docker. Built for backend developers who need quick database instances for development and testing.
 
 ## 🚀 Features
 
@@ -20,28 +20,37 @@ All databases are **100% open-source** with permissive licenses:
 
 ### SQL Databases
 - **PostgreSQL** (PostgreSQL License - MIT-like) - Most popular open-source database
-- **MariaDB** (GPL v2) - MySQL fork maintained by the community
-- **SQLite** (Public Domain) - Embedded database
+- **MariaDB** (GPL v2) - MySQL community fork with enhanced features
+- **SQLite** (Public Domain) - Lightweight embedded database
 - **DuckDB** (MIT) - Analytics-focused embedded database
 
-### NoSQL Databases
-- **Redis** (BSD 3-Clause) - In-memory data store
-- **Apache Cassandra** (Apache 2.0) - Distributed database
+### Key-Value Stores
+- **Redis** (BSD 3-Clause) - High-performance in-memory data store
+
+### Wide Column Stores  
+- **Apache Cassandra** (Apache 2.0) - Distributed NoSQL database
+
+### Time Series Databases
+- **InfluxDB 3 Core** (MIT/Apache 2.0) - Modern time series with Python integration
+- **TimescaleDB** (Timescale License) - PostgreSQL-based time series database
+- **QuestDB** (Apache 2.0) - High-performance time series with SQL support
+- **VictoriaMetrics** (Apache 2.0) - Prometheus-compatible metrics database
+- **Apache HoraeDB** (Apache 2.0) - Cloud-native distributed time series database
 
 ### Vector Databases
-- **Qdrant** (Apache 2.0) - Vector search engine with REST API
-- **Weaviate** (BSD 3-Clause) - AI-native vector database
+- **Qdrant** (Apache 2.0) - Vector database with REST API
+- **Weaviate** (BSD 3-Clause) - Vector search engine with ML models
 - **Milvus** (Apache 2.0) - Vector database for AI applications
 
 ### Graph Databases
-- **ArangoDB** (Apache 2.0) - Multi-model database (Graph + Document + Key-Value)
+- **ArangoDB** (Apache 2.0) - Multi-model database (graph, document, key-value)
 
 ### Search Databases
-- **Meilisearch** (MIT) - Modern, fast search engine
-- **Typesense** (GPL v3) - Open-source alternative to Elasticsearch
+- **Meilisearch** (MIT) - Modern full-text search engine
+- **Typesense** (GPL v3) - Fast, typo-tolerant search engine
 
 ### Embedded Databases
-- **LevelDB** (BSD) - Fast key-value storage library
+- **LevelDB** (BSD) - High-performance key-value storage library
 
 ## 🛠️ Installation
 
@@ -272,4 +281,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-Built with ❤️ by [hitoshyamamoto](https://github.com/hitoshyamamoto)
+Built by [hitoshyamamoto](https://github.com/hitoshyamamoto)

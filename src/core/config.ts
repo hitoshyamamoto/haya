@@ -1,4 +1,5 @@
-import * as fs from 'fs-extra';
+import { readFile, writeFile, access, mkdir } from 'fs/promises';
+import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { HayaiConfig } from './types.js';
@@ -19,14 +20,33 @@ export class ConfigManager {
     return ConfigManager.instance;
   }
 
+  private async pathExists(filePath: string): Promise<boolean> {
+    try {
+      await access(filePath, constants.F_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async ensureDir(dirPath: string): Promise<void> {
+    try {
+      await mkdir(dirPath, { recursive: true });
+    } catch (error: any) {
+      if (error.code !== 'EEXIST') {
+        throw error;
+      }
+    }
+  }
+
   public async loadConfig(): Promise<HayaiConfig> {
     if (this.config) {
       return this.config;
     }
 
     try {
-      if (await fs.pathExists(this.configPath)) {
-        const configContent = await fs.readFile(this.configPath, 'utf-8');
+      if (await this.pathExists(this.configPath)) {
+        const configContent = await readFile(this.configPath, 'utf-8');
         this.config = yaml.parse(configContent) as HayaiConfig;
       } else {
         this.config = this.getDefaultConfig();
@@ -46,12 +66,15 @@ export class ConfigManager {
     }
 
     try {
+      // Ensure directory exists
+      await this.ensureDir(path.dirname(this.configPath));
+      
       const configContent = yaml.stringify(this.config, {
         indent: 2,
         lineWidth: 80,
         minContentWidth: 20,
       });
-      await fs.writeFile(this.configPath, configContent, 'utf-8');
+      await writeFile(this.configPath, configContent, 'utf-8');
     } catch (error) {
       console.error('Failed to save configuration:', error);
       throw error;
