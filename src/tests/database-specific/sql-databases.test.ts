@@ -75,7 +75,7 @@ describe('SQL Databases Specific Tests', () => {
       expect(stdout).toContain('16');
 
       await execAsync(`docker exec ${instanceName} psql -U admin -d database -c "CREATE TABLE json_test (data JSONB);"`);
-      await execAsync(`docker exec ${instanceName} psql -U admin -d database -c "INSERT INTO json_test (data) VALUES ('{\"key\": \"value\"}');"`);
+      await execAsync(`docker exec ${instanceName} psql -U admin -d database -c "INSERT INTO json_test (data) VALUES ('{'key': 'value'}');"`);
       
       const { stdout: jsonResult } = await execAsync(`docker exec ${instanceName} psql -U admin -d database -c "SELECT data->>'key' FROM json_test;" -t`);
       expect(jsonResult.trim()).toContain('value');
@@ -145,7 +145,7 @@ describe('SQL Databases Specific Tests', () => {
       expect(stdout).toContain('11');
 
       await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "CREATE TABLE database.json_test (data JSON);"`);
-      await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "INSERT INTO database.json_test (data) VALUES ('{\"key\": \"value\"}');"`);
+      await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "INSERT INTO database.json_test (data) VALUES ('{'key': 'value'}');"`);
       
       const { stdout: jsonResult } = await execAsync(`docker exec ${instanceName} mysql -u admin -ppassword -e "SELECT JSON_EXTRACT(data, '$.key') FROM database.json_test;" -s`);
       expect(jsonResult).toContain('value');
