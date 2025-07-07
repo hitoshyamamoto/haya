@@ -4,11 +4,11 @@
   <p><em>Instantly create and manage local databases with one command</em></p>
   
   ![GitHub Actions](https://github.com/hitoshyamamoto/hayai/workflows/CI/badge.svg)
-  ![npm version](https://img.shields.io/npm/v/hayai.svg)
+  ![npm version](https://img.shields.io/npm/v/hayai-db.svg)
   ![License](https://img.shields.io/badge/license-MIT-blue.svg)
   ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
   
-  ![npm downloads](https://img.shields.io/npm/dw/hayai.svg)
+  ![npm downloads](https://img.shields.io/npm/dw/hayai-db.svg)
   ![GitHub stars](https://img.shields.io/github/stars/hitoshyamamoto/hayai.svg?style=social)
   ![GitHub forks](https://img.shields.io/github/forks/hitoshyamamoto/hayai.svg?style=social)
   
@@ -42,7 +42,7 @@ Fast, modern CLI tool for managing local SQL and NoSQL databases with Docker. Bu
 
 ```bash
 # Install globally
-npm install -g hayai
+npm install -g hayai-db
 
 # Initialize a PostgreSQL database
 hayai init
@@ -137,7 +137,7 @@ All databases are **100% open-source** with permissive licenses:
 
 ### Install Hayai
 ```bash
-npm install -g hayai
+npm install -g hayai-db
 ```
 
 ### Verify Installation
@@ -156,6 +156,16 @@ hayai --version
 | `hayai stop [name]` | Stop database instances | `hayai stop` or `hayai stop mydb` |
 | `hayai list` | List all database instances | `hayai list --running` |
 | `hayai studio [name]` | Open admin dashboards | `hayai studio mydb` |
+
+### Configuration Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `hayai init --config .hayaidb` | Initialize from configuration file | `hayai init --config .hayaidb` |
+| `hayai validate --config .hayaidb` | Validate configuration file | `hayai validate --config .hayaidb` |
+| `hayai config check` | Check configuration syntax | `hayai config check` |
+
+📚 **See [HAYAIDB.md](HAYAIDB.md) for complete configuration file documentation**
 
 ### Management Commands
 
@@ -245,6 +255,59 @@ defaults:
   volume_driver: local
   restart_policy: unless-stopped
 ```
+
+## 📄 .hayaidb - Declarative Database Configuration
+
+The `.hayaidb` file provides a **declarative approach** to database management, allowing you to define multiple databases with their configurations in a single file.
+
+### ✅ **Key Benefits**
+- **🔧 Centralized Configuration**: Define all databases in one place
+- **📋 Declarative Setup**: Specify what you want, not how to achieve it
+- **🔄 Reproducible Environments**: Share configurations across team members
+- **⚡ Batch Operations**: Initialize, start, or stop multiple databases at once
+
+### 🚀 **Quick Example**
+```yaml
+version: "1.0"
+project: my-app
+databases:
+  main-postgres:
+    engine: postgresql
+    port: 5432
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+  
+  cache-redis:
+    engine: redis
+    port: 6379
+    environment:
+      REDIS_PASSWORD: password
+  
+  metrics-influxdb2:
+    engine: influxdb2
+    port: 8086
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: myapp-org
+      DOCKER_INFLUXDB_INIT_BUCKET: metrics
+```
+
+### 🔧 **Usage**
+```bash
+# Initialize all databases from .hayaidb
+hayai init --config .hayaidb
+
+# Start all databases
+hayai start --config .hayaidb
+
+# Stop all databases
+hayai stop --config .hayaidb
+```
+
+📚 **For complete documentation and examples, see: [HAYAIDB.md](HAYAIDB.md)**
 
 ## 📚 Usage Examples
 
@@ -377,6 +440,11 @@ npm test
 # Run linting
 npm run lint
 ```
+
+### 📖 Documentation
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
+- [Development Guide](DEVELOPMENT.md) - Development setup and workflow
+- [.hayaidb Configuration](HAYAIDB.md) - Declarative database configuration guide
 
 ## 📄 License
 
