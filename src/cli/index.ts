@@ -53,12 +53,14 @@ ${chalk.bold('EXAMPLES')}
   ${chalk.cyan('hayai init -n cache -e redis --admin-dashboard -y')}
 
 ${chalk.bold('SUPPORTED DATABASES')}
-  ${chalk.green('SQL:')}        postgresql, mariadb, sqlite, duckdb
-  ${chalk.green('NoSQL:')}      redis, cassandra
-  ${chalk.green('Vector:')}     qdrant, weaviate, milvus
-  ${chalk.green('Graph:')}      arangodb
-  ${chalk.green('Search:')}     meilisearch, typesense
-  ${chalk.green('Embedded:')}   sqlite, duckdb, leveldb
+  ${chalk.green('SQL:')}           postgresql, mariadb, sqlite, duckdb
+  ${chalk.green('Key-Value:')}     redis
+  ${chalk.green('Wide Column:')}   cassandra
+  ${chalk.green('Time Series:')}   influxdb, timescaledb, questdb, victoriametrics, horaedb
+  ${chalk.green('Vector:')}        qdrant, weaviate, milvus
+  ${chalk.green('Graph:')}         arangodb
+  ${chalk.green('Search:')}        meilisearch, typesense
+  ${chalk.green('Embedded:')}      sqlite, duckdb, leveldb
 
 ${chalk.bold('LEARN MORE')}
   Documentation:  ${chalk.cyan('https://github.com/hitoshyamamoto/hayai#readme')}

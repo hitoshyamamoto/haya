@@ -21,7 +21,7 @@ export interface HayaiConfig {
 
 export interface DatabaseEngine {
   name: string;
-  type: 'sql' | 'nosql' | 'vector' | 'timeseries' | 'search' | 'graph' | 'embedded';
+  type: 'sql' | 'keyvalue' | 'widecolumn' | 'vector' | 'timeseries' | 'search' | 'graph' | 'embedded';
   version: string;
   image: string;
   ports: number[];

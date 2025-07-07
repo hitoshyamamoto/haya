@@ -92,12 +92,12 @@ export class DatabaseTemplates {
       },
     });
 
-    // ✅ NoSQL Databases (100% Open-Source)
+    // ✅ Key-Value Databases (100% Open-Source)
     this.addTemplate('redis', {
       name: 'Redis',
       engine: {
         name: 'redis',
-        type: 'nosql',
+        type: 'keyvalue',
         version: '7.0',
         image: 'redis:7.0-alpine',
         ports: [6379],
@@ -119,11 +119,12 @@ export class DatabaseTemplates {
       },
     });
 
+    // ✅ Wide Column Databases (100% Open-Source)
     this.addTemplate('cassandra', {
       name: 'Apache Cassandra',
       engine: {
         name: 'cassandra',
-        type: 'nosql',
+        type: 'widecolumn',
         version: '4.1',
         image: 'cassandra:4.1',
         ports: [9042, 7000],

@@ -208,7 +208,9 @@ defaults:
 
 ### 📊 Database Diversity
 - **SQL**: PostgreSQL, MariaDB, SQLite, DuckDB
-- **NoSQL**: Redis, Cassandra
+- **Key-Value**: Redis
+- **Wide Column**: Apache Cassandra
+- **Time Series**: InfluxDB, TimescaleDB, QuestDB, VictoriaMetrics, Apache HoraeDB
 - **Vector**: Qdrant, Weaviate, Milvus
 - **Graph**: ArangoDB
 - **Search**: Meilisearch, Typesense

@@ -6,6 +6,21 @@ import { getTemplate, getAvailableEngines, getAvailableTypes, getEnginesByType }
 import { createDatabase } from '../../core/docker.js';
 import { InitOptions } from '../../core/types.js';
 
+// Map technical types to user-friendly display names
+const getDisplayName = (type: string): string => {
+  const displayNames: Record<string, string> = {
+    'sql': 'SQL',
+    'keyvalue': 'Key-Value',
+    'widecolumn': 'Wide Column',
+    'timeseries': 'Time Series',
+    'vector': 'Vector',
+    'graph': 'Graph',
+    'search': 'Search',
+    'embedded': 'Embedded',
+  };
+  return displayNames[type] || type.toUpperCase();
+};
+
 export const initCommand = new Command('init')
   .description('Initialize a new database instance')
   .option('-n, --name <name>', 'Database instance name')
@@ -69,7 +84,7 @@ export const initCommand = new Command('init')
             name: 'type',
             message: 'What type of database do you need?',
             choices: availableTypes.map(type => ({
-              name: `${type.toUpperCase()} (${getEnginesByType(type).join(', ')})`,
+              name: `${getDisplayName(type)} (${getEnginesByType(type).join(', ')})`,
               value: type,
             })),
             when: !options.engine,
