@@ -1,0 +1,15 @@
+version: "1.0"
+project: haya
+databases:
+  demo-postgres:
+    engine: postgresql
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    port: 5000
+  demo-redis:
+    engine: redis
+    environment:
+      REDIS_PASSWORD: password
+    port: 5001

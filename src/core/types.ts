@@ -19,6 +19,29 @@ export interface HayaiConfig {
   };
 }
 
+// .hayaidb file structure interfaces
+export interface HayaiDbConfig {
+  version: string;
+  project?: string;
+  databases: Record<string, DatabaseSpec>;
+  profiles?: Record<string, string[]>;
+}
+
+export interface DatabaseSpec {
+  engine: string;
+  port?: number;
+  environment?: Record<string, string>;
+  volumes?: string[];
+  healthcheck?: {
+    test?: string;
+    interval?: string;
+    timeout?: string;
+    retries?: number;
+  };
+  admin_dashboard?: boolean;
+  client_sdk?: boolean;
+}
+
 export interface DatabaseEngine {
   name: string;
   type: 'sql' | 'keyvalue' | 'widecolumn' | 'vector' | 'timeseries' | 'search' | 'graph' | 'embedded';

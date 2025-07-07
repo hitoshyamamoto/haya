@@ -13,6 +13,8 @@ import { removeCommand } from './commands/remove.js';
 import { logsCommand } from './commands/logs.js';
 import { studioCommand } from './commands/studio.js';
 import { snapshotCommand } from './commands/snapshot.js';
+import { exportCommand } from './commands/export.js';
+import { syncCommand } from './commands/sync.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +53,12 @@ ${chalk.bold('EXAMPLES')}
   
   ${chalk.gray('# Create Redis cache for development')}
   ${chalk.cyan('hayai init -n cache -e redis --admin-dashboard -y')}
+  
+  ${chalk.gray('# Export current databases to .hayaidb file')}
+  ${chalk.cyan('hayai export')}
+  
+  ${chalk.gray('# Recreate databases from .hayaidb file')}
+  ${chalk.cyan('hayai sync')}
 
 ${chalk.bold('SUPPORTED DATABASES')}
   ${chalk.green('SQL:')}           postgresql, mariadb, sqlite, duckdb
@@ -89,6 +97,8 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
+  ${chalk.cyan('export')}         Export current databases to .hayaidb file
+  ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
 ${chalk.gray('Run')} ${chalk.cyan('hayai <command> --help')} ${chalk.gray('for detailed information on a command.')}
 
@@ -116,6 +126,8 @@ program.addCommand(removeCommand);
 program.addCommand(logsCommand);
 program.addCommand(studioCommand);
 program.addCommand(snapshotCommand);
+program.addCommand(exportCommand);
+program.addCommand(syncCommand);
 
 // Handle unknown commands
 program.on('command:*', (operands) => {
@@ -138,6 +150,8 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
+  ${chalk.cyan('export')}         Export current databases to .hayaidb file
+  ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
 ${chalk.gray('Run')} ${chalk.cyan('hayai <command> --help')} ${chalk.gray('for detailed information on a command.')}
 `);

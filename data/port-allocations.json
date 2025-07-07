@@ -1,0 +1,4 @@
+{
+  "5000": "demo-postgres",
+  "5001": "demo-redis"
+}
