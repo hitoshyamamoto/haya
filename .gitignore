@@ -41,8 +41,8 @@ logs
 docker-compose.yml
 docker-compose.override.yml
 
-# Haya specific
-haya.log
+# Hayai specific
+hayai.log
 snapshots/
 
 # Test coverage

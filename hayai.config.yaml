@@ -16,7 +16,7 @@ templates_dir: "./templates"
 # Docker settings
 docker:
   compose_file: "docker-compose.yml"
-  network_name: "haya-network"
+  network_name: "hayai-network"
   
 # Studio settings
 studio:
@@ -26,4 +26,4 @@ studio:
 # Logging settings
 logging:
   level: "info"
-  file: "haya.log" 
+  file: "hayai.log" 

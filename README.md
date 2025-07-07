@@ -24,13 +24,13 @@ It's a tool that helps you **start building, not just configuring**.
 
 ## ⚙️ Features
 
-- ✅ **One-command setup** with `haya init`
+- ✅ **One-command setup** with `hayai init`
 - ✅ **Supports SQL, NoSQL, Vector, Time-Series and more**
 - ✅ **Docker Compose generated automatically**
 - ✅ **Port allocation and volume setup included**
 - ✅ **.env file updated with DB URIs**
 - ✅ **Client SDKs (`client.ts`, `client.py`) optional**
-- ✅ **Admin dashboards via `haya studio`**
+- ✅ **Admin dashboards via `hayai studio`**
 - ✅ **Snapshot/restore support**
 - ✅ **Extensible via templates and plugins**
 
@@ -57,7 +57,7 @@ It's a tool that helps you **start building, not just configuring**.
 ### 1. Install and Initialize
 
 ```bash
-npx haya init
+npx hayai init
 ```
 
 Answer a few simple questions:
@@ -70,7 +70,7 @@ Answer a few simple questions:
 
 ### 2. Start Your Databases
 ```bash
-haya start
+hayai start
 ```
 This will start all configured databases via Docker Compose.
 
@@ -91,24 +91,24 @@ import { authDb } from './client/auth-db.ts'
 ## 🔎 Useful Commands
 
 ```bash
-haya list           # List running instances
-haya logs <name>    # View logs from a DB
-haya remove <name>  # Remove DB + volume + env entry
-haya stop           # Stop all DBs
-haya snapshot <db>  # Save current DB state
-haya studio         # Launch admin dashboards
+hayai list           # List running instances
+hayai logs <name>    # View logs from a DB
+hayai remove <name>  # Remove DB + volume + env entry
+hayai stop           # Stop all DBs
+hayai snapshot <db>  # Save current DB state
+hayai studio         # Launch admin dashboards
 ```
 
 ## 📁 Project Structure
 
 ```
-haya/
+hayai/
 ├── cli/                  # CLI interface
 ├── templates/            # DB configuration templates
 ├── core/                 # Engine logic
 ├── api/                  # Optional REST interface
 ├── dashboard/            # Optional visual interface
-├── haya.config.yaml     # Global config file
+├── hayai.config.yaml     # Global config file
 ├── docker-compose.yml    # Auto-generated services
 └── .env                  # Auto-generated connection URIs
 ```

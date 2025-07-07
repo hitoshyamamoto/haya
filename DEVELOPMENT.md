@@ -16,7 +16,7 @@ Before you start working on Hayai, make sure you have the following installed:
 1. Open WSL terminal
 2. Navigate to your project directory:
    ```bash
-   cd /home/hitoshi/Documents/github/hitoshyamamoto/haya
+   cd /home/hitoshi/Documents/github/hitoshyamamoto/hayai
    ```
 3. Install dependencies:
    ```bash
@@ -74,7 +74,7 @@ npm run dev -- stop
 ## Project Structure
 
 ```
-haya/
+hayai/
 ├── src/
 │   ├── cli/                 # CLI interface
 │   │   ├── index.ts         # Main CLI entry point
@@ -99,7 +99,7 @@ haya/
 ├── dist/                    # Compiled output
 ├── package.json             # Dependencies and scripts
 ├── tsconfig.json            # TypeScript configuration
-├── haya.config.yaml         # Global configuration
+├── hayai.config.yaml         # Global configuration
 └── .gitignore               # Git ignore rules
 ```
 
@@ -126,7 +126,7 @@ haya/
 ### WSL Path Issues
 If you encounter path issues with WSL, make sure you're working in the correct directory:
 ```bash
-pwd  # Should show /home/hitoshi/Documents/github/hitoshyamamoto/haya
+pwd  # Should show /home/hitoshi/Documents/github/hitoshyamamoto/hayai
 ```
 
 ### Node.js Not Found
