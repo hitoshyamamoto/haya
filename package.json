@@ -1,8 +1,8 @@
 {
   "name": "hayai",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
-  "description": "Fast, modern CLI tool for managing local databases with Docker",
+  "description": "⚡ Instantly create and manage local databases with one command",
   "main": "dist/index.js",
   "bin": {
     "hayai": "dist/cli/index.js"
