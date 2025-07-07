@@ -260,7 +260,10 @@ export class DockerManager {
         return `leveldb:///${dbName}`;
       
       // Time Series Databases
-      case 'influxdb':
+      case 'influxdb3':
+        return `http://localhost:${port}`;
+      
+      case 'influxdb2':
         return `http://localhost:${port}`;
       
       case 'timescaledb':
@@ -296,7 +299,8 @@ export class DockerManager {
       duckdb: 'alpine:latest',
       leveldb: 'alpine:latest',
       // Time Series Databases
-      influxdb: 'influxdb:latest',
+      influxdb3: 'influxdb:latest',
+      influxdb2: 'influxdb:latest',
       timescaledb: 'timescale/timescaledb:latest-pg16',
       questdb: 'questdb/questdb:latest',
       victoriametrics: 'victoriametrics/victoria-metrics:latest',
@@ -322,7 +326,8 @@ export class DockerManager {
       duckdb: 0, // No port for embedded
       leveldb: 0, // No port for embedded
       // Time Series Databases
-      influxdb: 8086,
+      influxdb3: 8086,
+      influxdb2: 8086,
       timescaledb: 5432,
       questdb: 9000,
       victoriametrics: 8428,
@@ -348,7 +353,8 @@ export class DockerManager {
       duckdb: '/data',
       leveldb: '/data',
       // Time Series Databases
-      influxdb: '/var/lib/influxdb3',
+      influxdb3: '/var/lib/influxdb3',
+      influxdb2: '/var/lib/influxdb2',
       timescaledb: '/var/lib/postgresql/data',
       questdb: '/var/lib/questdb',
       victoriametrics: '/victoria-metrics-data',
@@ -421,7 +427,13 @@ export class DockerManager {
         retries: 5,
       },
       // Time Series Databases
-      influxdb: {
+      influxdb3: {
+        test: 'curl -f http://localhost:8086/health || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      influxdb2: {
         test: 'curl -f http://localhost:8086/health || exit 1',
         interval: '10s',
         timeout: '5s',

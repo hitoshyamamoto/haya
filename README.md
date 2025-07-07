@@ -14,7 +14,7 @@
   
   ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
   ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-  ![Databases](https://img.shields.io/badge/Databases-18-success)
+  ![Databases](https://img.shields.io/badge/Databases-19-success)
   ![CLI](https://img.shields.io/badge/CLI-Tool-blue)
   
   ![Security](https://img.shields.io/badge/Security-0%20vulnerabilities-brightgreen)
@@ -78,8 +78,9 @@ All databases are **100% open-source** with permissive licenses:
 </details>
 
 <details>
-<summary><strong>Time Series Databases (5)</strong></summary>
+<summary><strong>Time Series Databases (6)</strong></summary>
 
+- **InfluxDB 2.x** (MIT/Apache 2.0) - Modern time series with Python integration
 - **InfluxDB 3 Core** (MIT/Apache 2.0) - Modern time series with Python integration
 - **TimescaleDB** (Timescale License) - PostgreSQL-based time series database
 - **QuestDB** (Apache 2.0) - High-performance time series with SQL support
@@ -111,7 +112,7 @@ All databases are **100% open-source** with permissive licenses:
 - **LevelDB** (BSD) - High-performance key-value storage library
 </details>
 
-**Total: 18 databases across 8 categories**
+**Total: 19 databases across 8 categories**
 
 ## 🛠️ Installation
 
@@ -258,7 +259,7 @@ hayai list
 hayai init -n vectors -e qdrant -y
 
 # Time series for metrics
-hayai init -n metrics -e influxdb -y
+hayai init -n metrics -e influxdb3 -y
 
 # Traditional data storage
 hayai init -n data -e postgresql -y
@@ -306,7 +307,7 @@ hayai init -n graph -e arangodb -p 8529 -y
 
 ### 📊 Comprehensive Database Support
 - **SQL Databases** - PostgreSQL, MariaDB, SQLite, DuckDB
-- **Time Series** - InfluxDB, TimescaleDB, QuestDB, VictoriaMetrics, HoraeDB
+- **Time Series** - InfluxDB 2.x, InfluxDB 3 Core, TimescaleDB, QuestDB, VictoriaMetrics, HoraeDB
 - **Vector Search** - Qdrant, Weaviate, Milvus
 - **Search Engines** - Meilisearch, Typesense
 - **Specialized** - Redis, Cassandra, ArangoDB, LevelDB

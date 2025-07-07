@@ -311,10 +311,10 @@ export class DatabaseTemplates {
     });
 
     // ✅ Time Series Databases (100% Open-Source)
-    this.addTemplate('influxdb', {
+    this.addTemplate('influxdb3', {
       name: 'InfluxDB 3 Core',
       engine: {
-        name: 'influxdb',
+        name: 'influxdb3',
         type: 'timeseries',
         version: '3.0',
         image: 'influxdb:latest',
@@ -340,6 +340,41 @@ export class DatabaseTemplates {
       client_sdk: {
         enabled: true,
         languages: ['typescript', 'python', 'javascript', 'go'],
+      },
+    });
+
+    this.addTemplate('influxdb2', {
+      name: 'InfluxDB 2.x',
+      engine: {
+        name: 'influxdb2',
+        type: 'timeseries',
+        version: '2.7',
+        image: 'influxdb:2.7-alpine',
+        ports: [8086],
+        volumes: ['/var/lib/influxdb2'],
+        environment: {
+          DOCKER_INFLUXDB_INIT_MODE: 'setup',
+          DOCKER_INFLUXDB_INIT_USERNAME: 'admin',
+          DOCKER_INFLUXDB_INIT_PASSWORD: 'password123',
+          DOCKER_INFLUXDB_INIT_ORG: 'hayai',
+          DOCKER_INFLUXDB_INIT_BUCKET: 'hayai_bucket',
+          DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 'hayai-admin-token-12345',
+        },
+        healthcheck: {
+          test: 'curl -f http://localhost:8086/health || exit 1',
+          interval: '10s',
+          timeout: '5s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 8086,
+        image: 'influxdb:2.7-alpine',
+      },
+      client_sdk: {
+        enabled: true,
+        languages: ['typescript', 'python', 'javascript', 'go', 'java'],
       },
     });
 
@@ -571,10 +606,15 @@ export class DatabaseTemplates {
         fullyOpenSource: true,
         notes: 'Low-level, used internally by many tools'
       },
-      influxdb: {
+      influxdb3: {
         license: 'MIT/Apache 2.0',
         fullyOpenSource: true,
         notes: 'InfluxDB 3 Core - Optimized for recent data (72h), with integrated Python'
+      },
+      influxdb2: {
+        license: 'MIT',
+        fullyOpenSource: true,
+        notes: 'InfluxDB 2.x - Mature, stable, full-featured time series platform'
       },
       timescaledb: {
         license: 'Timescale License (TSL)',
