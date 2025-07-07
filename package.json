@@ -1,10 +1,10 @@
 {
-  "name": "haya",
+  "name": "hayai",
   "version": "0.1.0",
   "description": "Instantly create and manage local SQL, NoSQL, and Vector databases with Docker using a fast and extensible CLI tool for backend developers.",
   "main": "dist/index.js",
   "bin": {
-    "haya": "dist/cli/index.js"
+    "hayai": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hitoshyamamoto/haya.git"
+    "url": "https://github.com/hitoshyamamoto/hayai.git"
   },
   "bugs": {
-    "url": "https://github.com/hitoshyamamoto/haya/issues"
+    "url": "https://github.com/hitoshyamamoto/hayai/issues"
   },
-  "homepage": "https://github.com/hitoshyamamoto/haya#readme",
+  "homepage": "https://github.com/hitoshyamamoto/hayai#readme",
   "dependencies": {
     "commander": "^11.1.0",
     "inquirer": "^9.2.12",
