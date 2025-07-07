@@ -1,140 +1,275 @@
-# ⚡ Hayai
+# Hayai ⚡
 
-**Instantly create and manage local SQL, NoSQL, and Vector databases with one command.**  
-Hayai is a fast, modern CLI tool designed to automate and simplify the local database experience for backend developers.
+> Instantly create and manage local databases with one command
 
----
+Fast, modern CLI tool for managing local SQL, NoSQL, and Vector databases with Docker. Built for backend developers who need quick database instances for development and testing.
 
-## 🚀 Why Hayai?
+## 🚀 Features
 
-Setting up local databases can be slow, repetitive, and error-prone. Hayai automates this process by generating `docker-compose` files, resolving ports, creating volumes, and wiring your `.env` with usable connection URIs — so you can focus on modeling data and writing code.
+- **100% Open-Source Databases**: Only includes databases with permissive licenses
+- **One Command Setup**: Initialize any database with a single command
+- **Docker-Powered**: Automated container management with health checks
+- **Auto Port Management**: Intelligent port allocation (5000-6000 range)
+- **Admin Dashboards**: Built-in web interfaces for database management
+- **Environment Integration**: Automatic `.env` file updates with connection URIs
+- **Modern CLI**: Interactive prompts with beautiful output
 
-Whether you're building APIs, experimenting with LLMs, or prototyping RAG pipelines, Hayai gives you ready-to-use infrastructure in seconds.
+## 📦 Supported Databases
 
----
+All databases are **100% open-source** with permissive licenses:
 
-## 🧠 Philosophy
+### SQL Databases
+- **PostgreSQL** (PostgreSQL License - MIT-like) - Most popular open-source database
+- **MariaDB** (GPL v2) - MySQL fork maintained by the community
+- **SQLite** (Public Domain) - Embedded database
+- **DuckDB** (MIT) - Analytics-focused embedded database
 
-Hayai doesn't try to build your backend. It doesn't define your schema or generate business logic.  
-Instead, it provides the database foundation you need — fast, modular, and developer-first.
+### NoSQL Databases
+- **Redis** (BSD 3-Clause) - In-memory data store
+- **Apache Cassandra** (Apache 2.0) - Distributed database
 
-It's a tool that helps you **start building, not just configuring**.
+### Vector Databases
+- **Qdrant** (Apache 2.0) - Vector search engine with REST API
+- **Weaviate** (BSD 3-Clause) - AI-native vector database
+- **Milvus** (Apache 2.0) - Vector database for AI applications
 
----
+### Graph Databases
+- **ArangoDB** (Apache 2.0) - Multi-model database (Graph + Document + Key-Value)
 
-## ⚙️ Features
+### Search Databases
+- **Meilisearch** (MIT) - Modern, fast search engine
+- **Typesense** (GPL v3) - Open-source alternative to Elasticsearch
 
-- ✅ **One-command setup** with `hayai init`
-- ✅ **Supports SQL, NoSQL, Vector, Time-Series and more**
-- ✅ **Docker Compose generated automatically**
-- ✅ **Port allocation and volume setup included**
-- ✅ **.env file updated with DB URIs**
-- ✅ **Client SDKs (`client.ts`, `client.py`) optional**
-- ✅ **Admin dashboards via `hayai studio`**
-- ✅ **Snapshot/restore support**
-- ✅ **Extensible via templates and plugins**
+### Embedded Databases
+- **LevelDB** (BSD) - Fast key-value storage library
 
----
-
-## 📦 Supported Database Types
-
-| Type         | Engines                               |
-|--------------|----------------------------------------|
-| SQL          | PostgreSQL, MySQL, MariaDB             |
-| NoSQL        | MongoDB, Redis, Cassandra              |
-| VectorDB     | Qdrant, Weaviate, Milvus               |
-| Time-Series  | InfluxDB, TimescaleDB                  |
-| Search       | Meilisearch, Typesense, Elasticsearch  |
-| Graph        | Neo4j, ArangoDB                        |
-| Embedded     | SQLite, DuckDB                         |
-
-> Hayai supports the free/open editions of each engine. Enterprise editions are not bundled.
-
----
-
-## 🔧 Getting Started
-
-### 1. Install and Initialize
+## 🛠️ Installation
 
 ```bash
-npx hayai init
+npm install -g hayai
 ```
 
-Answer a few simple questions:
+## 🎯 Quick Start
 
-- Choose your DB engine (e.g. PostgreSQL, MongoDB, Qdrant)
-- Name your instance
-- Select persistence and port mode
-- Enable admin dashboard (optional)
-- Generate client code (optional)
-
-### 2. Start Your Databases
 ```bash
+# Initialize a PostgreSQL database
+hayai init
+
+# Start all databases
+hayai start
+
+# List running databases
+hayai list
+
+# Open admin dashboards
+hayai studio
+
+# Stop all databases
+hayai stop
+```
+
+## 📋 Commands
+
+### `hayai init`
+Initialize a new database instance with interactive prompts or command-line options.
+
+```bash
+# Interactive mode
+hayai init
+
+# Quick setup
+hayai init -n mydb -e postgresql -p 5432 -y
+
+# With admin dashboard
+hayai init --admin-dashboard
+```
+
+### `hayai start [name]`
+Start database instances. Start all if no name specified.
+
+```bash
+# Start all databases
+hayai start
+
+# Start specific database
+hayai start mydb
+```
+
+### `hayai stop [name]`
+Stop database instances.
+
+```bash
+# Stop all databases
+hayai stop
+
+# Stop specific database
+hayai stop mydb
+```
+
+### `hayai list`
+List all database instances with their status.
+
+```bash
+# List all databases
+hayai list
+
+# Show only running databases
+hayai list --running
+
+# JSON output
+hayai list --format json
+```
+
+### `hayai remove <name>`
+Remove a database instance (with confirmation).
+
+```bash
+# Remove database
+hayai remove mydb
+
+# Force removal without confirmation
+hayai remove mydb --force
+```
+
+### `hayai studio [name]`
+Open admin dashboards for database management.
+
+```bash
+# Open all dashboards
+hayai studio
+
+# Open specific dashboard
+hayai studio mydb
+```
+
+### `hayai logs <name>`
+View logs from a database instance.
+
+```bash
+# View logs
+hayai logs mydb
+
+# Follow logs
+hayai logs mydb --follow
+```
+
+### `hayai snapshot <name>`
+Create a snapshot of a database instance.
+
+```bash
+# Create snapshot
+hayai snapshot mydb
+
+# Compressed snapshot
+hayai snapshot mydb --compress
+```
+
+## 🔧 Configuration
+
+Hayai uses a `hayai.config.yaml` file for configuration:
+
+```yaml
+version: '1.0.0'
+docker:
+  network_name: hayai-network
+  compose_file: docker-compose.yml
+  data_directory: ./data
+logging:
+  level: info
+  file: hayai.log
+defaults:
+  port_range:
+    start: 5000
+    end: 6000
+  volume_driver: local
+  restart_policy: unless-stopped
+```
+
+## 🌟 Why Hayai?
+
+### 🛡️ Security First
+- **No Deprecated Dependencies**: All dependencies are up-to-date
+- **Zero Vulnerabilities**: Clean `npm audit` results
+- **Secure by Default**: Only trusted, open-source databases
+
+### 🎯 Developer Experience
+- **Interactive CLI**: Beautiful prompts with validation
+- **Smart Defaults**: Sensible configuration out of the box
+- **Error Handling**: Clear error messages and recovery suggestions
+
+### 📊 Database Diversity
+- **SQL**: PostgreSQL, MariaDB, SQLite, DuckDB
+- **NoSQL**: Redis, Cassandra
+- **Vector**: Qdrant, Weaviate, Milvus
+- **Graph**: ArangoDB
+- **Search**: Meilisearch, Typesense
+
+## 📚 Examples
+
+### Setting up a development environment
+
+```bash
+# PostgreSQL for main data
+hayai init -n maindb -e postgresql -y
+
+# Redis for caching
+hayai init -n cache -e redis -y
+
+# Meilisearch for search
+hayai init -n search -e meilisearch -y
+
+# Start all
 hayai start
 ```
-This will start all configured databases via Docker Compose.
 
-### 3. Use the Environment
-Check the generated `.env`:
-
-```env
-AUTH_DB_URL=postgres://admin:admin@localhost:5433/db
-VECTOR_DB_URL=http://localhost:6333
-```
-
-Import the optional client SDK:
-
-```ts
-import { authDb } from './client/auth-db.ts'
-```
-
-## 🔎 Useful Commands
+### AI/ML Development
 
 ```bash
-hayai list           # List running instances
-hayai logs <name>    # View logs from a DB
-hayai remove <name>  # Remove DB + volume + env entry
-hayai stop           # Stop all DBs
-hayai snapshot <db>  # Save current DB state
-hayai studio         # Launch admin dashboards
+# Qdrant for vector search
+hayai init -n vectors -e qdrant -y
+
+# PostgreSQL for structured data
+hayai init -n data -e postgresql -y
+
+# Start and access
+hayai start
+hayai studio
 ```
 
-## 📁 Project Structure
+## 🔄 Dependency Management
 
-```
-hayai/
-├── cli/                  # CLI interface
-├── templates/            # DB configuration templates
-├── core/                 # Engine logic
-├── api/                  # Optional REST interface
-├── dashboard/            # Optional visual interface
-├── hayai.config.yaml     # Global config file
-├── docker-compose.yml    # Auto-generated services
-└── .env                  # Auto-generated connection URIs
-```
+Hayai is built with modern, secure dependencies:
 
-## 👤 Who It's For
+### Core Dependencies
+- **chalk** ^5.4.1 - Terminal colors
+- **commander** ^12.1.0 - CLI framework
+- **dockerode** ^4.0.7 - Docker API client
+- **inquirer** ^9.2.12 - Interactive prompts
+- **ora** ^8.2.0 - Loading spinners
+- **yaml** ^2.8.0 - YAML parser
 
-- Backend developers who need fast DBs
-- Full-stack devs integrating multiple data sources
-- AI/LLM engineers experimenting with vector stores
-- API designers using SQL/NoSQL combos
-- DevOps creating local environments
-- Educators teaching DBs and system architecture
+### Development Dependencies
+- **typescript** ^5.8.3 - TypeScript compiler
+- **@types/node** ^22.10.6 - Node.js type definitions
+- **eslint** ^8.57.1 - Code linting
+- **prettier** ^3.6.2 - Code formatting
 
-## 🚫 What Hayai Doesn't Do
+All dependencies are regularly updated and security-audited.
 
-- Define or manage schema
-- Generate backend APIs
-- Replace your logic or framework
-- Deploy to production cloud environments (yet)
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## 📄 License
 
-MIT License © 2025 hitoshyamamoto  
-See LICENSE for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙌 Contribute
+## 🙏 Acknowledgments
 
-Want to add support for a new database? Improve the CLI?  
-Check out CONTRIBUTING.md and help make Hayai even better.
+- **Docker** - Container platform
+- **Open-source database communities** - For creating amazing databases
+- **Node.js ecosystem** - For excellent tooling
+
+---
+
+Built with ❤️ by [hitoshyamamoto](https://github.com/hitoshyamamoto)

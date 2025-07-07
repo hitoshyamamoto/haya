@@ -211,14 +211,14 @@ export class DockerManager {
       case 'postgresql':
         return `postgresql://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:${port}/${env.POSTGRES_DB}`;
       
-      case 'mysql':
+      case 'mariadb':
         return `mysql://${env.MYSQL_USER}:${env.MYSQL_PASSWORD}@localhost:${port}/${env.MYSQL_DATABASE}`;
-      
-      case 'mongodb':
-        return `mongodb://${env.MONGO_INITDB_ROOT_USERNAME}:${env.MONGO_INITDB_ROOT_PASSWORD}@localhost:${port}/${env.MONGO_INITDB_DATABASE}`;
       
       case 'redis':
         return `redis://:${env.REDIS_PASSWORD}@localhost:${port}`;
+      
+      case 'cassandra':
+        return `cassandra://localhost:${port}`;
       
       case 'qdrant':
         return `http://localhost:${port}`;
@@ -226,14 +226,26 @@ export class DockerManager {
       case 'weaviate':
         return `http://localhost:${port}`;
       
-      case 'influxdb':
+      case 'milvus':
         return `http://localhost:${port}`;
       
-      case 'elasticsearch':
+      case 'arangodb':
         return `http://localhost:${port}`;
       
       case 'meilisearch':
         return `http://localhost:${port}`;
+      
+      case 'typesense':
+        return `http://localhost:${port}`;
+      
+      case 'sqlite':
+        return `sqlite:///${dbName}.db`;
+      
+      case 'duckdb':
+        return `duckdb:///${dbName}.duckdb`;
+      
+      case 'leveldb':
+        return `leveldb:///${dbName}`;
       
       default:
         return `http://localhost:${port}`;
@@ -243,14 +255,18 @@ export class DockerManager {
   private getImageForEngine(engineName: string): string {
     const imageMap: Record<string, string> = {
       postgresql: 'postgres:16-alpine',
-      mysql: 'mysql:8.0',
-      mongodb: 'mongo:7.0',
+      mariadb: 'mariadb:11',
       redis: 'redis:7.0-alpine',
+      cassandra: 'cassandra:4.1',
       qdrant: 'qdrant/qdrant:v1.7.0',
       weaviate: 'semitechnologies/weaviate:1.23.0',
-      influxdb: 'influxdb:2.7-alpine',
-      elasticsearch: 'docker.elastic.co/elasticsearch/elasticsearch:8.11.0',
+      milvus: 'milvusdb/milvus:v2.3.0',
+      arangodb: 'arangodb:3.11',
       meilisearch: 'getmeili/meilisearch:v1.5',
+      typesense: 'typesense/typesense:0.25.0',
+      sqlite: 'alpine:latest',
+      duckdb: 'alpine:latest',
+      leveldb: 'alpine:latest',
     };
 
     return imageMap[engineName] || 'alpine:latest';
@@ -259,14 +275,18 @@ export class DockerManager {
   private getDefaultPortForEngine(engineName: string): number {
     const portMap: Record<string, number> = {
       postgresql: 5432,
-      mysql: 3306,
-      mongodb: 27017,
+      mariadb: 3306,
       redis: 6379,
+      cassandra: 9042,
       qdrant: 6333,
       weaviate: 8080,
-      influxdb: 8086,
-      elasticsearch: 9200,
+      milvus: 19530,
+      arangodb: 8529,
       meilisearch: 7700,
+      typesense: 8108,
+      sqlite: 0, // No port for embedded
+      duckdb: 0, // No port for embedded
+      leveldb: 0, // No port for embedded
     };
 
     return portMap[engineName] || 8080;
@@ -275,14 +295,18 @@ export class DockerManager {
   private getDefaultVolumeForEngine(engineName: string): string {
     const volumeMap: Record<string, string> = {
       postgresql: '/var/lib/postgresql/data',
-      mysql: '/var/lib/mysql',
-      mongodb: '/data/db',
+      mariadb: '/var/lib/mysql',
       redis: '/data',
+      cassandra: '/var/lib/cassandra',
       qdrant: '/qdrant/storage',
       weaviate: '/var/lib/weaviate',
-      influxdb: '/var/lib/influxdb2',
-      elasticsearch: '/usr/share/elasticsearch/data',
+      milvus: '/var/lib/milvus',
+      arangodb: '/var/lib/arangodb3',
       meilisearch: '/meili_data',
+      typesense: '/data',
+      sqlite: '/data',
+      duckdb: '/data',
+      leveldb: '/data',
     };
 
     return volumeMap[engineName] || '/data';
@@ -296,16 +320,10 @@ export class DockerManager {
         timeout: '5s',
         retries: 5,
       },
-      mysql: {
-        test: 'mysqladmin ping -h 127.0.0.1 -u admin --password=password',
+      mariadb: {
+        test: 'healthcheck.sh --connect --innodb_initialized',
         interval: '10s',
         timeout: '5s',
-        retries: 5,
-      },
-      mongodb: {
-        test: 'echo "db.runCommand("ping").ok" | mongosh localhost:27017/test --quiet',
-        interval: '10s',
-        timeout: '10s',
         retries: 5,
       },
       redis: {
@@ -314,8 +332,44 @@ export class DockerManager {
         timeout: '3s',
         retries: 5,
       },
+      cassandra: {
+        test: 'nodetool status',
+        interval: '30s',
+        timeout: '10s',
+        retries: 5,
+      },
       qdrant: {
         test: 'wget --no-verbose --tries=1 --spider http://localhost:6333/health || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      weaviate: {
+        test: 'wget --no-verbose --tries=1 --spider http://localhost:8080/v1/.well-known/ready || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      milvus: {
+        test: 'curl -f http://localhost:9091/healthz || exit 1',
+        interval: '30s',
+        timeout: '10s',
+        retries: 5,
+      },
+      arangodb: {
+        test: 'curl -f http://localhost:8529/_api/version || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      meilisearch: {
+        test: 'wget --no-verbose --tries=1 --spider http://localhost:7700/health || exit 1',
+        interval: '10s',
+        timeout: '5s',
+        retries: 5,
+      },
+      typesense: {
+        test: 'curl -f http://localhost:8108/health || exit 1',
         interval: '10s',
         timeout: '5s',
         retries: 5,

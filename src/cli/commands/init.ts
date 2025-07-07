@@ -9,7 +9,7 @@ import { InitOptions } from '../../core/types.js';
 export const initCommand = new Command('init')
   .description('Initialize a new database instance')
   .option('-n, --name <name>', 'Database instance name')
-  .option('-e, --engine <engine>', 'Database engine (postgresql, mysql, mongodb, redis, etc.)')
+  .option('-e, --engine <engine>', 'Database engine (postgresql, mariadb, redis, etc.)')
   .option('-p, --port <port>', 'Custom port number', parseInt)
   .option('--admin-dashboard', 'Enable admin dashboard')
   .option('--no-admin-dashboard', 'Disable admin dashboard')
@@ -47,7 +47,6 @@ export const initCommand = new Command('init')
         console.log(chalk.cyan('\n🚀 Let\'s set up your database!\n'));
         
         const availableTypes = getAvailableTypes();
-        const availableEngines = getAvailableEngines();
 
         const answers = await inquirer.prompt([
           {
