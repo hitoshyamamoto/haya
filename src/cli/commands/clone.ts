@@ -16,6 +16,72 @@ interface CloneOptions extends CLIOptions {
   dryRun?: boolean;
 }
 
+// Engines totalmente compatíveis com implementação nativa específica
+const FULLY_COMPATIBLE_ENGINES = new Set([
+  'postgresql',  // pg_dump + psql (nativo)
+  'mariadb',     // mysqldump + mysql (nativo)
+  'redis',       // BGSAVE + RDB copy (nativo)
+  'sqlite',      // File copy (confiável)
+  'duckdb'       // File copy (confiável)
+]);
+
+function validateCloneCompatibility(sourceEngine: string): { compatible: boolean; reason?: string } {
+  if (!FULLY_COMPATIBLE_ENGINES.has(sourceEngine)) {
+    return {
+      compatible: false,
+      reason: `Engine '${sourceEngine}' uses generic backup which may be unreliable`
+    };
+  }
+  
+  return { compatible: true };
+}
+
+function showManualCloneGuidance(engine: string): void {
+  console.log(chalk.yellow('\n💡 Manual Clone Guidance:'));
+  
+  switch (engine) {
+    case 'cassandra':
+      console.log(chalk.gray('  • Use: nodetool snapshot + sstableloader'));
+      console.log(chalk.gray('  • Or: cqlsh COPY commands'));
+      break;
+    case 'influxdb2':
+      console.log(chalk.gray('  • Use: influx backup + influx restore'));
+      break;
+    case 'influxdb3':
+      console.log(chalk.gray('  • Use: influx3 export + influx3 import'));
+      break;
+    case 'qdrant':
+      console.log(chalk.gray('  • Use: Qdrant snapshots API'));
+      console.log(chalk.gray('  • Or: /collections/{collection}/snapshots'));
+      break;
+    case 'meilisearch':
+      console.log(chalk.gray('  • Use: dumps API endpoint'));
+      console.log(chalk.gray('  • POST /dumps + GET /dumps/{dumpUid}'));
+      break;
+    case 'milvus':
+      console.log(chalk.gray('  • Use: Milvus backup tool'));
+      console.log(chalk.gray('  • Or: collection export/import'));
+      break;
+    case 'arangodb':
+      console.log(chalk.gray('  • Use: arangodump + arangorestore'));
+      break;
+    case 'timescaledb':
+      console.log(chalk.gray('  • Use: pg_dump (TimescaleDB extensions)'));
+      console.log(chalk.gray('  • Include: --extension timescaledb'));
+      break;
+    default:
+      console.log(chalk.gray(`  • Check ${engine} documentation for native backup/restore tools`));
+      console.log(chalk.gray('  • Use engine-specific export/import commands'));
+      console.log(chalk.gray('  • Consider data migration tools or scripts'));
+  }
+  
+  console.log(chalk.yellow('\n📚 Alternative Options:'));
+  console.log(chalk.gray('  • Use database-specific migration tools'));
+  console.log(chalk.gray('  • Write custom data transfer scripts'));
+  console.log(chalk.gray('  • Use hayai studio to access admin dashboards'));
+  console.log(chalk.cyan('  • Run: hayai studio --help'));
+}
+
 async function executeClone(sourceInstance: any, targetName: string): Promise<void> {
   const dockerManager = getDockerManager();
   
@@ -69,7 +135,8 @@ async function cloneData(source: any, targetName: string): Promise<void> {
       await cloneFileDB(sourceContainer, targetContainer);
       break;
     default:
-      await cloneGeneric(sourceContainer, targetContainer);
+      // Esta situação nunca deveria acontecer devido à validação de compatibilidade
+      throw new Error(`Unsupported engine for cloning: ${source.engine}`);
   }
 }
 
@@ -206,65 +273,6 @@ async function cloneFileDB(sourceContainer: string, targetContainer: string): Pr
   });
 }
 
-async function cloneGeneric(sourceContainer: string, targetContainer: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // Create tar backup of data
-    const backupProcess = spawn('docker', [
-      'exec', sourceContainer,
-      'tar', '-czf', '/tmp/data-backup.tar.gz', '/data'
-    ]);
-    
-    backupProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error('Failed to create backup'));
-        return;
-      }
-      
-      // Copy backup
-      const copyProcess = spawn('docker', [
-        'cp', `${sourceContainer}:/tmp/data-backup.tar.gz`, '/tmp/hayai-backup.tar.gz'
-      ]);
-      
-      copyProcess.on('close', (copyCode) => {
-        if (copyCode !== 0) {
-          reject(new Error('Failed to copy backup'));
-          return;
-        }
-        
-        // Restore to target
-        const restoreProcess = spawn('docker', [
-          'cp', '/tmp/hayai-backup.tar.gz', `${targetContainer}:/tmp/data-backup.tar.gz`
-        ]);
-        
-        restoreProcess.on('close', (restoreCode) => {
-          if (restoreCode !== 0) {
-            reject(new Error('Failed to copy to target'));
-            return;
-          }
-          
-          // Extract in target
-          const extractProcess = spawn('docker', [
-            'exec', targetContainer,
-            'tar', '-xzf', '/tmp/data-backup.tar.gz', '-C', '/'
-          ]);
-          
-          extractProcess.on('close', (extractCode) => {
-            extractCode === 0 ? resolve() : reject(new Error('Failed to extract backup'));
-          });
-          
-          extractProcess.on('error', reject);
-        });
-        
-        restoreProcess.on('error', reject);
-      });
-      
-      copyProcess.on('error', reject);
-    });
-    
-    backupProcess.on('error', reject);
-  });
-}
-
 async function handleClone(options: CloneOptions): Promise<void> {
   const dockerManager = getDockerManager();
   await dockerManager.initialize();
@@ -281,6 +289,15 @@ async function handleClone(options: CloneOptions): Promise<void> {
   if (sourceInstance.status !== 'running') {
     console.error(chalk.red(`❌ Source database '${options.from}' must be running`));
     console.log(chalk.yellow(`💡 Start it with: ${chalk.cyan(`hayai start ${options.from}`)}`));
+    process.exit(1);
+  }
+
+  // Validate compatibility
+  const compatibilityResult = validateCloneCompatibility(sourceInstance.engine);
+  if (!compatibilityResult.compatible) {
+    console.error(chalk.red(`❌ Source engine '${sourceInstance.engine}' is not fully compatible for cloning.`));
+    console.error(chalk.red(`Reason: ${compatibilityResult.reason}`));
+    showManualCloneGuidance(sourceInstance.engine);
     process.exit(1);
   }
   
@@ -366,7 +383,7 @@ async function handleClone(options: CloneOptions): Promise<void> {
 }
 
 export const cloneCommand = new Command('clone')
-  .description('Clone database instances')
+  .description('Clone database instances (compatible engines only)')
   .option('-f, --from <name>', 'Source database name')
   .option('-t, --to <name>', 'Target database name (1:1 clone)')
   .option('-tm, --to-multiple <names>', 'Target database names (comma-separated, 1:N clone)')
@@ -375,20 +392,38 @@ export const cloneCommand = new Command('clone')
   .option('--dry-run', 'Show what would be cloned without executing')
   .option('--verbose', 'Enable verbose output')
   .addHelpText('after', `
-${chalk.bold('Examples:')}
-  ${chalk.cyan('# Simple 1:1 clone')}
-  hayai clone --from prod --to staging
-  hayai clone -f prod -t staging -y
+${chalk.bold('Supported Engines (Fully Compatible):')}
+  ${chalk.green('✅ postgresql')}   - Native pg_dump + psql
+  ${chalk.green('✅ mariadb')}      - Native mysqldump + mysql  
+  ${chalk.green('✅ redis')}        - Native BGSAVE + RDB copy
+  ${chalk.green('✅ sqlite')}       - Reliable file copy
+  ${chalk.green('✅ duckdb')}       - Reliable file copy
 
-  ${chalk.cyan('# Clone to multiple databases (1:N)')}
-  hayai clone --from prod --to-multiple "test1,test2,test3"
-  hayai clone -f prod -tm "dev,staging,qa" -y
+${chalk.bold('Unsupported Engines (Manual Clone Required):')}
+  ${chalk.red('❌ cassandra, influxdb2, influxdb3, timescaledb, questdb')}
+  ${chalk.red('❌ qdrant, weaviate, milvus, arangodb, nebula')}
+  ${chalk.red('❌ meilisearch, typesense, victoriametrics, horaedb')}
+  ${chalk.red('❌ leveldb, lmdb, tikv')}
+
+${chalk.bold('Examples:')}
+  ${chalk.cyan('# Clone PostgreSQL database')}
+  hayai clone --from prod-postgres --to staging-postgres
+  hayai clone -f prod-postgres -t staging-postgres -y
+
+  ${chalk.cyan('# Clone Redis to multiple instances')}
+  hayai clone --from cache-redis --to-multiple "test1,test2,test3"
+  hayai clone -f cache-redis -tm "dev,staging,qa" -y
 
   ${chalk.cyan('# Safe cloning with preview')}
-  hayai clone -f prod -t staging --dry-run
+  hayai clone -f prod-mariadb -t staging-mariadb --dry-run
 
 ${chalk.bold('Visual Syntax (alternative):')}
-  ${chalk.cyan('hayai clone prod → staging')}        ${chalk.gray('# Simple clone')}
-  ${chalk.cyan('hayai clone prod → test1,test2')}    ${chalk.gray('# Multiple targets')}
+  ${chalk.cyan('hayai clone postgres-prod → postgres-staging')}    ${chalk.gray('# Simple clone')}
+  ${chalk.cyan('hayai clone redis-cache → redis1,redis2')}         ${chalk.gray('# Multiple targets')}
+
+${chalk.bold('For unsupported engines:')}
+  ${chalk.yellow('Use engine-specific tools:')} cassandra (nodetool), influx (backup/restore)
+  ${chalk.yellow('Access admin dashboards:')} hayai studio
+  ${chalk.yellow('Manual data migration:')} Write custom scripts or use migration tools
 `)
   .action(handleClone); 
