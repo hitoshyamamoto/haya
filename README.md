@@ -182,6 +182,10 @@ hayai --version
 | `hayai remove <name>` | Remove database instance | `hayai remove mydb --force` |
 | `hayai logs <name>` | View database logs | `hayai logs mydb --follow` |
 | `hayai snapshot <name>` | Create database snapshot | `hayai snapshot mydb --compress` |
+| `hayai clone <options>` | Clone database instances | `hayai clone --from prod --to staging` |
+| `hayai merge <options>` | Merge two databases bidirectionally | `hayai merge --source dbA --target dbB --preview` |
+
+📸 **For complete backup and snapshot documentation, see: [ABOUT_BACKUP.md](ABOUT_BACKUP.md)**
 
 ### Detailed Usage
 
@@ -223,6 +227,69 @@ hayai start mydb
 # Start with custom options
 hayai start --detach --timeout 60
 ```
+</details>
+
+<details>
+<summary><strong>hayai clone</strong> - Clone Database Instances</summary>
+
+```bash
+# Simple 1:1 clone
+hayai clone --from prod --to staging
+hayai clone -f prod -t staging -y
+
+# Clone to multiple databases (1:N)
+hayai clone --from prod --to-multiple "test1,test2,test3"
+hayai clone -f prod -tm "dev,staging,qa" -y
+
+# Preview clone without executing
+hayai clone -f prod -t staging --dry-run
+
+# Force overwrite existing databases
+hayai clone -f prod -t staging --force -y
+```
+
+**Options:**
+- `-f, --from <name>` - Source database name
+- `-t, --to <name>` - Target database name (1:1 clone)
+- `-tm, --to-multiple <names>` - Target database names (comma-separated, 1:N clone)
+- `-y, --confirm` - Skip confirmation prompt
+- `--force` - Overwrite existing target databases
+- `--dry-run` - Show what would be cloned without executing
+
+**Supported Engines:** PostgreSQL, MariaDB, Redis, SQLite, DuckDB, and all other engines with generic data copying.
+</details>
+
+<details>
+<summary><strong>hayai merge</strong> - Merge Database Instances</summary>
+
+```bash
+# Preview merge operation
+hayai merge --source dbA --target dbB --preview
+hayai merge -s dbA -t dbB --preview
+
+# Execute merge operation
+hayai merge --source dbA --target dbB --execute
+hayai merge -s dbA -t dbB --execute
+
+# Force merge without confirmation
+hayai merge -s dbA -t dbB --execute --force
+```
+
+**Options:**
+- `-s, --source <name>` - Source database name
+- `-t, --target <name>` - Target database name
+- `--preview` - Preview the merge operation without executing
+- `--execute` - Execute the merge operation
+- `--backup-both` - Create backups of both databases before merging
+- `--force` - Skip confirmation prompts
+
+**How Merge Works:**
+- Data from source is copied to target
+- Data from target is copied to source  
+- Both databases end up with combined data
+- Conflicts are resolved automatically when possible
+
+**Supported Engines:** PostgreSQL (SQL-level), MariaDB (SQL-level), Redis (key-level with REPLACE), others (generic file-based).
 </details>
 
 <details>
@@ -453,6 +520,7 @@ npm run lint
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
 - [Development Guide](DEVELOPMENT.md) - Development setup and workflow
 - [.hayaidb Configuration](HAYAIDB.md) - Declarative database configuration guide
+- [Backup & Snapshots](ABOUT_BACKUP.md) - Complete backup and restoration guide
 
 ## 📄 License
 

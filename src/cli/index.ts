@@ -15,6 +15,8 @@ import { studioCommand } from './commands/studio.js';
 import { snapshotCommand } from './commands/snapshot.js';
 import { exportCommand } from './commands/export.js';
 import { syncCommand } from './commands/sync.js';
+import { cloneCommand } from './commands/clone.js';
+import { mergeCommand } from './commands/merge.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -54,6 +56,12 @@ ${chalk.bold('EXAMPLES')}
   ${chalk.gray('# Create Redis cache for development')}
   ${chalk.cyan('hayai init -n cache -e redis --admin-dashboard -y')}
   
+  ${chalk.gray('# Clone database for testing')}
+  ${chalk.cyan('hayai clone --from prod --to staging')}
+  
+  ${chalk.gray('# Merge two databases')}
+  ${chalk.cyan('hayai merge --source dbA --target dbB --preview')}
+  
   ${chalk.gray('# Export current databases to .hayaidb file')}
   ${chalk.cyan('hayai export')}
   
@@ -61,12 +69,13 @@ ${chalk.bold('EXAMPLES')}
   ${chalk.cyan('hayai sync')}
 
 ${chalk.bold('SUPPORTED DATABASES')}
-  ${chalk.green('SQL:')}           postgresql, mariadb, sqlite, duckdb
-  ${chalk.green('Embedded:')}      leveldb
-  ${chalk.green('Key-Value:')}     redis
+  ${chalk.green('SQL:')}           postgresql, mariadb
+  ${chalk.green('Analytics:')}     duckdb
+  ${chalk.green('Embedded:')}      sqlite, lmdb
+  ${chalk.green('Key-Value:')}     redis, leveldb, tikv
   ${chalk.green('Wide Column:')}   cassandra
   ${chalk.green('Vector:')}        qdrant, weaviate, milvus
-  ${chalk.green('Graph:')}         arangodb
+  ${chalk.green('Graph:')}         arangodb, nebula
   ${chalk.green('Search:')}        meilisearch, typesense
   ${chalk.green('Time Series:')}   influxdb2, influxdb3, timescaledb, questdb, victoriametrics, horaedb
 
@@ -97,6 +106,8 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
+  ${chalk.cyan('clone')} <options> Clone database instances
+  ${chalk.cyan('merge')} <options> Merge two database instances
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
@@ -126,6 +137,8 @@ program.addCommand(removeCommand);
 program.addCommand(logsCommand);
 program.addCommand(studioCommand);
 program.addCommand(snapshotCommand);
+program.addCommand(cloneCommand);
+program.addCommand(mergeCommand);
 program.addCommand(exportCommand);
 program.addCommand(syncCommand);
 
@@ -150,6 +163,8 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
+  ${chalk.cyan('clone')} <options> Clone database instances
+  ${chalk.cyan('merge')} <options> Merge two database instances
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
