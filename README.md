@@ -69,24 +69,31 @@ hayai studio
 All databases are **100% open-source** with permissive licenses:
 
 <details>
-<summary><strong>SQL Databases (4)</strong></summary>
+<summary><strong>SQL Databases (2)</strong></summary>
 
-- **PostgreSQL** (PostgreSQL License) - Most popular open-source database
+- **PostgreSQL** (PostgreSQL License) - Most popular open-source relational database
 - **MariaDB** (GPL v2) - MySQL community fork with enhanced features
+</details>
+
+<details>
+<summary><strong>Analytics Databases (1)</strong></summary>
+
+- **DuckDB** (MIT) - Analytics-focused columnar SQL database for OLAP workloads
+</details>
+
+<details>
+<summary><strong>Embedded Databases (2)</strong></summary>
+
 - **SQLite** (Public Domain) - Lightweight embedded SQL database
-- **DuckDB** (MIT) - Analytics-focused embedded SQL database
+- **LMDB** (OpenLDAP Public License) - Ultra-fast memory-mapped embedded key-value store
 </details>
 
 <details>
-<summary><strong>Embedded Databases (1)</strong></summary>
-
-- **LevelDB** (BSD) - High-performance key-value storage library
-</details>
-
-<details>
-<summary><strong>Key-Value Databases (1)</strong></summary>
+<summary><strong>Key-Value Databases (3)</strong></summary>
 
 - **Redis** (BSD 3-Clause) - High-performance in-memory key-value store
+- **LevelDB** (BSD) - High-performance embedded key-value storage library
+- **TiKV** (Apache 2.0) - CNCF graduated distributed transactional key-value store
 </details>
 
 <details>
@@ -104,9 +111,10 @@ All databases are **100% open-source** with permissive licenses:
 </details>
 
 <details>
-<summary><strong>Graph Databases (1)</strong></summary>
+<summary><strong>Graph Databases (2)</strong></summary>
 
 - **ArangoDB** (Apache 2.0) - Multi-model database (graph, document, key-value)
+- **NebulaGraph** (Apache 2.0) - Distributed graph database with millisecond latency
 </details>
 
 <details>
@@ -127,7 +135,7 @@ All databases are **100% open-source** with permissive licenses:
 - **Apache HoraeDB** (Apache 2.0) - Cloud-native distributed time series database
 </details>
 
-**Total: 19 databases across 8 categories**
+**Total: 22 databases across 9 categories**
 
 ## 🛠️ Installation
 

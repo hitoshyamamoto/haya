@@ -44,7 +44,7 @@ export interface DatabaseSpec {
 
 export interface DatabaseEngine {
   name: string;
-  type: 'sql' | 'keyvalue' | 'widecolumn' | 'vector' | 'timeseries' | 'search' | 'graph' | 'embedded';
+  type: 'sql' | 'keyvalue' | 'widecolumn' | 'vector' | 'timeseries' | 'search' | 'graph' | 'embedded' | 'analytics';
   version: string;
   image: string;
   ports: number[];

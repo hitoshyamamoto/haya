@@ -1,12 +1,22 @@
 {
   "name": "hayai-db",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "type": "module",
   "description": "⚡ Instantly create and manage local databases with one command",
   "main": "dist/index.js",
   "bin": {
     "hayai": "dist/cli/index.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "HAYAIDB.md",
+    "CONTRIBUTING.md",
+    "DEVELOPMENT.md",
+    ".hayaidb",
+    "hayai.config.yaml"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc && node dist/cli/index.js",
@@ -69,7 +79,9 @@
     "dockerode": "^4.0.7",
     "fs-extra": "^11.3.0",
     "inquirer": "^9.2.12",
+    "ioredis": "^5.6.1",
     "ora": "^8.2.0",
+    "pg": "^8.16.3",
     "yaml": "^2.8.0"
   },
   "devDependencies": {

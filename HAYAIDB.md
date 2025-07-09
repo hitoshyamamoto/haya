@@ -70,13 +70,25 @@ databases:               # Database definitions
 ### **SQL Databases**
 - `postgresql` - PostgreSQL database
 - `mariadb` - MariaDB database
-- `sqlite` - SQLite database
+
+### **Analytics Databases**
 - `duckdb` - DuckDB analytics database
 
-### **NoSQL Databases**
+### **Embedded Databases**
+- `sqlite` - SQLite database
+- `lmdb` - LMDB memory-mapped key-value store
+
+### **Key-Value Databases**
 - `redis` - Redis key-value store
+- `leveldb` - LevelDB key-value store
+- `tikv` - TiKV distributed key-value store
+
+### **Wide Column Databases**
 - `cassandra` - Apache Cassandra
+
+### **Graph Databases**
 - `arangodb` - ArangoDB multi-model
+- `nebula` - NebulaGraph distributed graph database
 
 ### **Time Series**
 - `influxdb2` - InfluxDB 2.x
@@ -84,9 +96,12 @@ databases:               # Database definitions
 - `timescaledb` - TimescaleDB
 - `questdb` - QuestDB
 - `victoriametrics` - VictoriaMetrics
+- `horaedb` - Apache HoraeDB
 
 ### **Vector & Search**
 - `qdrant` - Qdrant vector database
+- `weaviate` - Weaviate vector database
+- `milvus` - Milvus vector database
 - `meilisearch` - Meilisearch
 - `typesense` - Typesense
 

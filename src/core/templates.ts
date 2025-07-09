@@ -70,7 +70,7 @@ export class DatabaseTemplates {
       name: 'SQLite',
       engine: {
         name: 'sqlite',
-        type: 'sql',
+        type: 'embedded',
         version: '3',
         image: 'alpine:latest',
         ports: [],
@@ -83,7 +83,7 @@ export class DatabaseTemplates {
       name: 'DuckDB',
       engine: {
         name: 'duckdb',
-        type: 'sql',
+        type: 'analytics',
         version: '1.0',
         image: 'alpine:latest',
         ports: [],
@@ -119,6 +119,35 @@ export class DatabaseTemplates {
       },
     });
 
+    // ✅ Embedded Databases (100% Open-Source)
+    this.addTemplate('leveldb', {
+      name: 'LevelDB',
+      engine: {
+        name: 'leveldb',
+        type: 'keyvalue',
+        version: 'latest',
+        image: 'alpine:latest',
+        ports: [],
+        volumes: ['/data'],
+        environment: {},
+      },
+    });
+
+    this.addTemplate('lmdb', {
+      name: 'LMDB',
+      engine: {
+        name: 'lmdb',
+        type: 'embedded',
+        version: 'latest',
+        image: 'alpine:latest',
+        ports: [],
+        volumes: ['/data'],
+        environment: {
+          LMDB_MAP_SIZE: '1GB',
+        },
+      },
+    });
+
     // ✅ Wide Column Databases (100% Open-Source)
     this.addTemplate('cassandra', {
       name: 'Apache Cassandra',
@@ -136,6 +165,28 @@ export class DatabaseTemplates {
         },
         healthcheck: {
           test: 'nodetool status',
+          interval: '30s',
+          timeout: '10s',
+          retries: 5,
+        },
+      },
+    });
+
+    this.addTemplate('tikv', {
+      name: 'TiKV',
+      engine: {
+        name: 'tikv',
+        type: 'keyvalue',
+        version: '7.1',
+        image: 'pingcap/tikv:v7.1.0',
+        ports: [20160, 20180],
+        volumes: ['/data'],
+        environment: {
+          TIKV_ADDR: '0.0.0.0:20160',
+          TIKV_STATUS_ADDR: '0.0.0.0:20180',
+        },
+        healthcheck: {
+          test: 'curl -f http://localhost:20180/status || exit 1',
           interval: '30s',
           timeout: '10s',
           retries: 5,
@@ -246,6 +297,33 @@ export class DatabaseTemplates {
       },
     });
 
+    this.addTemplate('nebula', {
+      name: 'NebulaGraph',
+      engine: {
+        name: 'nebula',
+        type: 'graph',
+        version: '3.8',
+        image: 'vesoft/nebula-graphd:v3.8.0',
+        ports: [9669, 19669],
+        volumes: ['/usr/local/nebula/data'],
+        environment: {
+          NEBULA_USER: 'root',
+          NEBULA_PASSWORD: 'nebula',
+        },
+        healthcheck: {
+          test: 'echo "SHOW HOSTS" | nebula-console -addr localhost -port 9669 -u root -p nebula || exit 1',
+          interval: '30s',
+          timeout: '10s',
+          retries: 5,
+        },
+      },
+      admin_dashboard: {
+        enabled: true,
+        port: 7001,
+        image: 'vesoft/nebula-studio:v3.8.0',
+      },
+    });
+
     // ✅ Search Databases (100% Open-Source)
     this.addTemplate('meilisearch', {
       name: 'Meilisearch',
@@ -293,20 +371,6 @@ export class DatabaseTemplates {
           timeout: '5s',
           retries: 5,
         },
-      },
-    });
-
-    // ✅ Embedded Databases
-    this.addTemplate('leveldb', {
-      name: 'LevelDB',
-      engine: {
-        name: 'leveldb',
-        type: 'embedded',
-        version: '1.0',
-        image: 'alpine:latest',
-        ports: [],
-        volumes: ['/data'],
-        environment: {},
       },
     });
 
@@ -566,10 +630,25 @@ export class DatabaseTemplates {
         fullyOpenSource: true,
         notes: 'Completely open-source'
       },
+      leveldb: {
+        license: 'BSD',
+        fullyOpenSource: true,
+        notes: 'Low-level, used internally by many tools'
+      },
+      lmdb: {
+        license: 'OpenLDAP Public License (BSD-like)',
+        fullyOpenSource: true,
+        notes: 'Ultra-fast memory-mapped key-value store, 32KB footprint'
+      },
       cassandra: {
         license: 'Apache 2.0',
         fullyOpenSource: true,
         notes: 'Completely open-source'
+      },
+      tikv: {
+        license: 'Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'CNCF graduated project, distributed transactional key-value store'
       },
       qdrant: {
         license: 'Apache 2.0',
@@ -591,6 +670,11 @@ export class DatabaseTemplates {
         fullyOpenSource: true,
         notes: 'Supports Graph + Document + Key-Value'
       },
+      nebula: {
+        license: 'Apache 2.0',
+        fullyOpenSource: true,
+        notes: 'Distributed graph database with millisecond latency and native GQL support'
+      },
       meilisearch: {
         license: 'MIT',
         fullyOpenSource: true,
@@ -600,11 +684,6 @@ export class DatabaseTemplates {
         license: 'GPL v3',
         fullyOpenSource: true,
         notes: 'Modern alternative to Meilisearch'
-      },
-      leveldb: {
-        license: 'BSD',
-        fullyOpenSource: true,
-        notes: 'Low-level, used internally by many tools'
       },
       influxdb3: {
         license: 'MIT/Apache 2.0',
