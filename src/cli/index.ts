@@ -17,6 +17,7 @@ import { exportCommand } from './commands/export.js';
 import { syncCommand } from './commands/sync.js';
 import { cloneCommand } from './commands/clone.js';
 import { mergeCommand } from './commands/merge.js';
+import { migrateCommand } from './commands/migrate.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -62,6 +63,9 @@ ${chalk.bold('EXAMPLES')}
   ${chalk.gray('# Merge two databases')}
   ${chalk.cyan('hayai merge --source dbA --target dbB --preview')}
   
+  ${chalk.gray('# Migrate between compatible engines')}
+  ${chalk.cyan('hayai migrate --from influx2-db --to influx3-db --target-engine influxdb3')}
+  
   ${chalk.gray('# Export current databases to .hayaidb file')}
   ${chalk.cyan('hayai export')}
   
@@ -106,8 +110,9 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
-  ${chalk.cyan('clone')} <options> Clone database instances
+  ${chalk.cyan('clone')} <options> Clone database instances (compatible engines only)
   ${chalk.cyan('merge')} <options> Merge two database instances
+  ${chalk.cyan('migrate')} <options> Migrate between compatible engines
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
@@ -128,17 +133,18 @@ ${chalk.bold('OPTIONS')}
     }
   });
 
-// Add all commands
+// Register commands
 program.addCommand(initCommand);
+program.addCommand(listCommand);
 program.addCommand(startCommand);
 program.addCommand(stopCommand);
-program.addCommand(listCommand);
 program.addCommand(removeCommand);
 program.addCommand(logsCommand);
 program.addCommand(studioCommand);
 program.addCommand(snapshotCommand);
 program.addCommand(cloneCommand);
 program.addCommand(mergeCommand);
+program.addCommand(migrateCommand);
 program.addCommand(exportCommand);
 program.addCommand(syncCommand);
 
@@ -163,8 +169,9 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('logs')} <name>   View logs from a database instance
   ${chalk.cyan('studio')} [name] Open admin dashboards
   ${chalk.cyan('snapshot')} <name> Create a database snapshot
-  ${chalk.cyan('clone')} <options> Clone database instances
+  ${chalk.cyan('clone')} <options> Clone database instances (compatible engines only)
   ${chalk.cyan('merge')} <options> Merge two database instances
+  ${chalk.cyan('migrate')} <options> Migrate between compatible engines
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
@@ -174,7 +181,7 @@ ${chalk.gray('Run')} ${chalk.cyan('hayai <command> --help')} ${chalk.gray('for d
 }
 
 // Parse command line arguments
-program.parse(process.argv);
+program.parse();
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
