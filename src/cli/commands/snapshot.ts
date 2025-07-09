@@ -18,8 +18,7 @@ async function createSnapshotDirectory(dir: string): Promise<void> {
 
 async function createSnapshot(
   instance: any,
-  snapshotPath: string,
-  _compress: boolean
+  snapshotPath: string
 ): Promise<void> {
   const template = getTemplate(instance.engine);
   if (!template) {
@@ -50,7 +49,7 @@ async function createSnapshot(
   }
 }
 
-async function createPostgreSQLSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sql'): Promise<void> {
+async function createPostgreSQLSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const dumpProcess = spawn('docker', [
       'exec', `${instanceName}-db`,
@@ -69,7 +68,7 @@ async function createPostgreSQLSnapshot(instanceName: string, snapshotPath: stri
   });
 }
 
-async function createMariaDBSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sql'): Promise<void> {
+async function createMariaDBSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const dumpProcess = spawn('docker', [
       'exec', `${instanceName}-db`,
@@ -88,7 +87,7 @@ async function createMariaDBSnapshot(instanceName: string, snapshotPath: string,
   });
 }
 
-async function createRedisSnapshot(instanceName: string, snapshotPath: string, _format: string = 'rdb'): Promise<void> {
+async function createRedisSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     // Create RDB backup
     const bgsaveProcess = spawn('docker', [
@@ -120,7 +119,7 @@ async function createRedisSnapshot(instanceName: string, snapshotPath: string, _
   });
 }
 
-async function createInfluxDBSnapshot(instanceName: string, snapshotPath: string, _format: string = 'backup'): Promise<void> {
+async function createInfluxDBSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const backupProcess = spawn('docker', [
       'exec', `${instanceName}-db`,
@@ -164,7 +163,7 @@ async function createInfluxDBSnapshot(instanceName: string, snapshotPath: string
   });
 }
 
-async function createGenericSnapshot(instanceName: string, snapshotPath: string, _format: string = 'tar'): Promise<void> {
+async function createGenericSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const backupProcess = spawn('docker', [
       'exec', `${instanceName}-db`,
@@ -192,7 +191,7 @@ async function createGenericSnapshot(instanceName: string, snapshotPath: string,
   });
 }
 
-async function createCassandraSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sstable'): Promise<void> {
+async function createCassandraSnapshot(instanceName: string, snapshotPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const snapshotProcess = spawn('docker', [
       'exec', `${instanceName}-db`,
@@ -280,7 +279,7 @@ export const snapshotCommand = new Command('snapshot')
 
       const spinner = ora('Creating snapshot...').start();
 
-      await createSnapshot(instance, snapshotPath, options.compress || false);
+      await createSnapshot(instance, snapshotPath);
 
       // Get file size
       const stats = await fs.stat(snapshotPath);
@@ -446,20 +445,4 @@ snapshotCommand
     } catch (error) {
       console.error(chalk.red('❌ Failed to clean snapshots:'), error instanceof Error ? error.message : error);
     }
-  });
-
-async function showSnapshotDetails(_dbName: string, snapshotFile: string): Promise<void> {
-  try {
-    const stats = await fs.stat(snapshotFile);
-    const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
-    
-    console.log(chalk.cyan('\n📋 Snapshot Details:\n'));
-    console.log(`File: ${chalk.bold(path.basename(snapshotFile))}`);
-    console.log(`Size: ${chalk.yellow(sizeMB)} MB`);
-    console.log(`Created: ${chalk.gray(stats.birthtime.toLocaleString())}`);
-    console.log(`Modified: ${chalk.gray(stats.mtime.toLocaleString())}`);
-    
-  } catch (error) {
-    console.error(chalk.red('❌ Failed to get snapshot details:'), error);
-  }
-} 
+  }); 

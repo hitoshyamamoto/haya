@@ -7,7 +7,7 @@ export const stopCommand = new Command('stop')
   .description('Stop database instances')
   .argument('[name]', 'Database instance name (optional, stops all if not specified)')
   .option('-a, --all', 'Stop all database instances')
-  .action(async (name: string, _options) => {
+  .action(async (name: string) => {
     try {
       const dockerManager = getDockerManager();
       await dockerManager.initialize();

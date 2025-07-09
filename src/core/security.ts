@@ -220,7 +220,7 @@ export class SecurityManager {
   /**
    * Creates network isolation for operation
    */
-  public async createNetworkIsolation(_instances: string[]): Promise<string> {
+  public async createNetworkIsolation(): Promise<string> {
     const networkName = `hayai-op-${crypto.randomUUID().substring(0, 8)}`;
     
     return new Promise((resolve, reject) => {
@@ -357,7 +357,6 @@ export class SecurityManager {
     instanceName: string,
     operation: string
   ): Promise<string> {
-    const _startTime = Date.now();
     let success = false;
     let error: string | undefined;
     

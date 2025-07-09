@@ -2,11 +2,9 @@ import { readFile, writeFile, access, mkdir, rm } from 'fs/promises';
 import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import { spawn, SpawnOptions } from 'child_process';
+import { spawn } from 'child_process';
 import chalk from 'chalk';
-import ora from 'ora';
-import { getTemplate, TEMPLATES } from './templates.js';
-import { DockerInstance, DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
+import { DatabaseInstance, DatabaseTemplate, ComposeFile } from './types.js';
 import { getConfig, getComposeFilePath, getDataDirectory } from './config.js';
 import { allocatePort, deallocatePort } from './port-manager.js';
 
@@ -38,14 +36,13 @@ export class DockerManager {
       const child = spawn('docker', ['--version'], { stdio: 'pipe' });
       
       let stdout = '';
-      let stderr = '';
       
       child.stdout.on('data', (data) => {
         stdout += data.toString();
       });
       
       child.stderr.on('data', (data) => {
-        stderr += data.toString();
+        data.toString();
       });
       
       child.on('close', (code) => {
@@ -877,14 +874,13 @@ export async function executeDockerCommand(args: string[]): Promise<string> {
     const process = spawn('docker', args);
     
     let stdout = '';
-    let _stderr = '';
     
     process.stdout.on('data', (data) => {
       stdout += data.toString();
     });
     
     process.stderr.on('data', (data) => {
-      _stderr += data.toString();
+      data.toString();
     });
     
     process.on('close', (code) => {

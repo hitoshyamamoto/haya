@@ -102,7 +102,7 @@ program
   .option('-q, --quiet', 'Suppress output except errors')
   .option('--config <path>', 'Path to configuration file')
   .configureHelp({
-    formatHelp: (cmd, helper) => {
+    formatHelp: () => {
       return helpText + `
 
 ${chalk.bold('COMMANDS')}
@@ -132,7 +132,7 @@ ${chalk.bold('OPTIONS')}
 `;
     }
   })
-  .hook('preAction', async (_cmd, _helper) => {
+  .hook('preAction', async () => {
     if (!program.opts().quiet) {
       console.log(banner);
     }

@@ -93,7 +93,7 @@ async function mergePostgreSQL(sourceContainer: string, targetContainer: string)
     
     dumpProcess.stdout.pipe(restoreProcess.stdin);
     
-    restoreProcess.on('close', (_code) => {
+    restoreProcess.on('close', () => {
       // Accept some errors as conflicts are expected in merge
       resolve();
     });
@@ -119,7 +119,7 @@ async function mergeMariaDB(sourceContainer: string, targetContainer: string): P
     
     dumpProcess.stdout.pipe(restoreProcess.stdin);
     
-    restoreProcess.on('close', (_code) => {
+    restoreProcess.on('close', () => {
       resolve();
     });
     
@@ -142,7 +142,7 @@ async function mergeRedis(sourceContainer: string, targetContainer: string): Pro
       sourceKeys += data.toString();
     });
     
-    sourceKeysProcess.on('close', (_code) => {
+    sourceKeysProcess.on('close', () => {
       if (sourceKeys.trim().split('\n').filter(key => key.trim()).length === 0) {
         resolve(); // No keys to copy
         return;
@@ -169,7 +169,7 @@ async function copyRedisKey(fromContainer: string, toContainer: string, key: str
       dumpData += data.toString();
     });
     
-    copyProcess.on('close', (_code) => {
+    copyProcess.on('close', () => {
       if (dumpData.trim()) {
         // Restore with REPLACE
         const restoreProcess = spawn('docker', [
@@ -197,7 +197,7 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
       'tar', '-czf', '/tmp/merge-backup.tar.gz', '/data'
     ]);
     
-    backupProcess.on('close', (_code) => {
+    backupProcess.on('close', () => {
       if (backupProcess.exitCode !== 0) {
         reject(new Error('Failed to create merge backup'));
         return;
@@ -208,7 +208,7 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
         'cp', `${sourceContainer}:/tmp/merge-backup.tar.gz`, '/tmp/hayai-merge.tar.gz'
       ]);
       
-      copyProcess.on('close', (_copyCode) => {
+      copyProcess.on('close', () => {
         if (copyProcess.exitCode !== 0) {
           reject(new Error('Failed to copy merge data'));
           return;
@@ -218,7 +218,7 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
           'cp', '/tmp/hayai-merge.tar.gz', `${targetContainer}:/tmp/merge-backup.tar.gz`
         ]);
         
-        restoreProcess.on('close', (_restoreCode) => {
+        restoreProcess.on('close', () => {
           if (restoreProcess.exitCode === 0) {
             // Extract with keep-newer-files to avoid overwriting
             const extractProcess = spawn('docker', [

@@ -108,8 +108,6 @@ async function showSecurityPolicy(): Promise<void> {
 }
 
 async function showAuditLogs(): Promise<void> {
-  const _securityManager = getSecurityManager();
-  
   try {
     const fs = await import('fs/promises');
     const auditPath = '.hayai/audit.log';
