@@ -18,6 +18,7 @@ import { syncCommand } from './commands/sync.js';
 import { cloneCommand } from './commands/clone.js';
 import { mergeCommand } from './commands/merge.js';
 import { migrateCommand } from './commands/migrate.js';
+import { securityCommand } from './commands/security.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +67,9 @@ ${chalk.bold('EXAMPLES')}
   ${chalk.gray('# Migrate between compatible engines')}
   ${chalk.cyan('hayai migrate --from influx2-db --to influx3-db --target-engine influxdb3')}
   
+  ${chalk.gray('# Configure security settings')}
+  ${chalk.cyan('hayai security --init')}
+  
   ${chalk.gray('# Export current databases to .hayaidb file')}
   ${chalk.cyan('hayai export')}
   
@@ -113,6 +117,7 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('clone')} <options> Clone database instances (compatible engines only)
   ${chalk.cyan('merge')} <options> Merge two database instances
   ${chalk.cyan('migrate')} <options> Migrate between compatible engines
+  ${chalk.cyan('security')} <options> Configure and manage security settings
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 
@@ -147,6 +152,7 @@ program.addCommand(mergeCommand);
 program.addCommand(migrateCommand);
 program.addCommand(exportCommand);
 program.addCommand(syncCommand);
+program.addCommand(securityCommand);
 
 // Handle unknown commands
 program.on('command:*', (operands) => {
@@ -172,6 +178,7 @@ ${chalk.bold('COMMANDS')}
   ${chalk.cyan('clone')} <options> Clone database instances (compatible engines only)
   ${chalk.cyan('merge')} <options> Merge two database instances
   ${chalk.cyan('migrate')} <options> Migrate between compatible engines
+  ${chalk.cyan('security')} <options> Configure and manage security settings
   ${chalk.cyan('export')}         Export current databases to .hayaidb file
   ${chalk.cyan('sync')}           Sync databases from .hayaidb configuration
 

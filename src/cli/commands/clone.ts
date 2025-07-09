@@ -135,7 +135,7 @@ async function cloneData(source: any, targetName: string): Promise<void> {
       await cloneFileDB(sourceContainer, targetContainer);
       break;
     default:
-      // Esta situação nunca deveria acontecer devido à validação de compatibilidade
+      // This situation should never happen due to compatibility validation
       throw new Error(`Unsupported engine for cloning: ${source.engine}`);
   }
 }

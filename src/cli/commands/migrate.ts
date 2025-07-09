@@ -18,9 +18,9 @@ interface MigrateOptions extends CLIOptions {
   dryRun?: boolean;
 }
 
-// Mapeamento expandido de migrações compatíveis
+// Expanded mapping of compatible migrations
 const MIGRATION_COMPATIBILITY: Record<string, string[]> = {
-  // Time Series Migrations (expandido)
+  // Time Series Migrations (expanded)
   'influxdb2': ['influxdb3', 'victoriametrics', 'questdb'],
   'influxdb3': ['influxdb2', 'victoriametrics', 'questdb'],
   'timescaledb': ['influxdb2', 'influxdb3', 'questdb', 'victoriametrics'],
@@ -29,30 +29,30 @@ const MIGRATION_COMPATIBILITY: Record<string, string[]> = {
   'horaedb': ['influxdb2', 'influxdb3', 'questdb'],
   
   // SQL Database Migrations
-  'postgresql': ['timescaledb'], // PostgreSQL pode migrar para TimescaleDB
-  'mariadb': ['postgresql'], // MariaDB pode migrar para PostgreSQL
+  'postgresql': ['timescaledb'], // PostgreSQL can migrate to TimescaleDB
+  'mariadb': ['postgresql'], // MariaDB can migrate to PostgreSQL
   
-  // Vector Database Migrations (expandido)
+  // Vector Database Migrations (expanded)
   'qdrant': ['milvus', 'weaviate'],
   'milvus': ['qdrant', 'weaviate'],
   'weaviate': ['qdrant', 'milvus'],
   
-  // Search Engine Migrations (expandido)
+  // Search Engine Migrations (expanded)
   'meilisearch': ['typesense'],
   'typesense': ['meilisearch'],
   
   // Graph Database Migrations
-  'arangodb': ['nebula'], // ArangoDB pode migrar para Nebula (conceitual)
-  'nebula': ['arangodb'], // Nebula pode migrar para ArangoDB (conceitual)
+  'arangodb': ['nebula'], // ArangoDB can migrate to Nebula (conceptual)
+  'nebula': ['arangodb'], // Nebula can migrate to ArangoDB (conceptual)
   
-  // Key-Value Migrations (expandido)
+  // Key-Value Migrations (expanded)
   'redis': ['leveldb', 'lmdb', 'tikv'],
   'leveldb': ['lmdb', 'redis', 'tikv'],
   'lmdb': ['leveldb', 'redis', 'tikv'],
   'tikv': ['redis', 'leveldb', 'lmdb'],
   
   // Wide Column Migrations
-  'cassandra': ['arangodb'], // Cassandra pode migrar para ArangoDB em cenários específicos
+  'cassandra': ['arangodb'], // Cassandra can migrate to ArangoDB in specific scenarios
 };
 
 function validateMigrationCompatibility(sourceEngine: string, targetEngine: string): { compatible: boolean; reason?: string } {
@@ -401,13 +401,13 @@ async function executeMigrationStrategy(source: any, targetName: string, targetE
   }
 }
 
-// Implementações reais de migração com output detalhado
+// Implementations of actual migrations with detailed output
 
 async function migrateInfluxLineProtocol(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
   return new Promise((resolve, reject) => {
     logMigrationStep('Exporting data using InfluxDB Line Protocol...');
     
-    // Lista todas as buckets/databases primeiro
+    // List all buckets/databases first
     const listBucketsProcess = spawn('docker', [
       'exec', sourceContainer,
       'influx', 'bucket', 'list'
@@ -647,7 +647,7 @@ async function migrateKeyValueDatabase(sourceContainer: string, targetContainer:
   });
 }
 
-// Novas implementações específicas
+// New specific implementations
 
 async function migrateInfluxToPrometheus(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
   return new Promise((resolve, reject) => {
