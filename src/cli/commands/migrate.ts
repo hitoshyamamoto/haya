@@ -403,7 +403,7 @@ async function executeMigrationStrategy(source: any, targetName: string, targetE
 
 // Implementations of actual migrations with detailed output
 
-async function migrateInfluxLineProtocol(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
+async function migrateInfluxLineProtocol(sourceContainer: string, targetContainer: string, _sourceEngine: string, _targetEngine: string): Promise<void> {
   return new Promise((resolve, reject) => {
     logMigrationStep('Exporting data using InfluxDB Line Protocol...');
     
@@ -413,13 +413,13 @@ async function migrateInfluxLineProtocol(sourceContainer: string, targetContaine
       'influx', 'bucket', 'list'
     ], { stdio: ['inherit', 'pipe', 'pipe'] });
     
-    let bucketsData = '';
+    let _bucketsData = '';
     listBucketsProcess.stdout.on('data', (data) => {
-      bucketsData += data.toString();
+      _bucketsData += data.toString();
     });
     
-    listBucketsProcess.on('close', (code) => {
-      if (code !== 0) {
+    listBucketsProcess.on('close', (_code) => {
+      if (_code !== 0) {
         logMigrationStep('Warning: Could not list buckets, using default query');
       }
       
@@ -462,7 +462,7 @@ async function migrateInfluxLineProtocol(sourceContainer: string, targetContaine
   });
 }
 
-async function migrateSQLToLineProtocol(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
+async function migrateSQLToLineProtocol(sourceContainer: string, targetContainer: string, sourceEngine: string, _targetEngine: string): Promise<void> {
   return new Promise((resolve, reject) => {
     logMigrationStep('Converting SQL data to Line Protocol format...');
     
@@ -527,86 +527,77 @@ async function migrateSQLToLineProtocol(sourceContainer: string, targetContainer
 }
 
 async function migrateVectorDatabase(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      logMigrationStep('Exporting vector collections...', `From ${sourceEngine} to ${targetEngine}`);
-      
-      // Create temporary directory for vector data
-      const tempDir = '/tmp/hayai-vector-migration';
-      await fs.ensureDir(tempDir);
-      
-      logMigrationStep('Creating vector data export...', 'Extracting embeddings and metadata');
-      
-      // Simulate real vector database export with progress
-      let collectionsProcessed = 0;
-      const totalCollections = 3; // Mock number
-      
-      for (let i = 0; i < totalCollections; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        collectionsProcessed++;
-        logMigrationStep(`Processing collection ${collectionsProcessed}/${totalCollections}...`, 
-          `Extracting vectors and payloads`);
-      }
-      
-      logMigrationStep('Converting vector formats...', 'Transforming embeddings for target engine');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      logMigrationStep('Importing to target vector database...', 'Rebuilding indexes');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      logMigrationStep('Vector migration completed', `${collectionsProcessed} collections migrated`);
-      
-      // Cleanup
-      await fs.remove(tempDir);
-      resolve();
-    } catch (error) {
-      reject(error);
+  try {
+    logMigrationStep('Exporting vector collections...', `From ${sourceEngine} to ${targetEngine}`);
+    
+    // Create temporary directory for vector data
+    const tempDir = '/tmp/hayai-vector-migration';
+    await fs.ensureDir(tempDir);
+    
+    logMigrationStep('Creating vector data export...', 'Extracting embeddings and metadata');
+    
+    // Simulate real vector database export with progress
+    let collectionsProcessed = 0;
+    const totalCollections = 3; // Mock number
+    
+    for (let i = 0; i < totalCollections; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      collectionsProcessed++;
+      logMigrationStep(`Processing collection ${collectionsProcessed}/${totalCollections}...`, 
+        `Extracting vectors and payloads`);
     }
-  });
+    
+    logMigrationStep('Converting vector formats...', 'Transforming embeddings for target engine');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    logMigrationStep('Importing to target vector database...', 'Rebuilding indexes');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    logMigrationStep('Vector migration completed', `${collectionsProcessed} collections migrated`);
+    
+    // Cleanup
+    await fs.remove(tempDir);
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function migrateGraphDatabase(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      logMigrationStep('Exporting graph data...', `${sourceEngine} → ${targetEngine}`);
-      
-      logMigrationStep('Extracting vertices and edges...', 'Processing graph topology');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      logMigrationStep('Converting graph schema...', 'Transforming data model');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      logMigrationStep('Importing graph structure...', 'Rebuilding relationships');
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
-      logMigrationStep('Graph migration completed', 'Topology preserved');
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
+  try {
+    logMigrationStep('Exporting graph data...', `${sourceEngine} → ${targetEngine}`);
+    
+    logMigrationStep('Extracting vertices and edges...', 'Processing graph topology');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    logMigrationStep('Converting graph schema...', 'Transforming data model');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    logMigrationStep('Importing graph structure...', 'Rebuilding relationships');
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    
+    logMigrationStep('Graph migration completed', 'Topology preserved');
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function migrateDocumentDatabase(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      logMigrationStep('Exporting search indexes...', `${sourceEngine} → ${targetEngine}`);
-      
-      logMigrationStep('Extracting documents and schemas...', 'Processing search indexes');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      logMigrationStep('Converting search configurations...', 'Transforming analyzers and filters');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      logMigrationStep('Rebuilding search indexes...', 'Optimizing for target engine');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      logMigrationStep('Document migration completed', 'Search functionality restored');
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
+  try {
+    logMigrationStep('Exporting search indexes...', `${sourceEngine} → ${targetEngine}`);
+    
+    logMigrationStep('Extracting documents and schemas...', 'Processing search indexes');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    logMigrationStep('Converting search configurations...', 'Transforming analyzers and filters');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    logMigrationStep('Rebuilding search indexes...', 'Optimizing for target engine');
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    logMigrationStep('Document migration completed', 'Search functionality restored');
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function migrateKeyValueDatabase(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
@@ -649,8 +640,8 @@ async function migrateKeyValueDatabase(sourceContainer: string, targetContainer:
 
 // New specific implementations
 
-async function migrateInfluxToPrometheus(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migrateInfluxToPrometheus(_sourceContainer: string, _targetContainer: string, _sourceEngine: string, _targetEngine: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Converting InfluxDB to Prometheus format...');
     
     setTimeout(() => {
@@ -660,8 +651,8 @@ async function migrateInfluxToPrometheus(sourceContainer: string, targetContaine
   });
 }
 
-async function migratePrometheusToInflux(sourceContainer: string, targetContainer: string, sourceEngine: string, targetEngine: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migratePrometheusToInflux(_sourceContainer: string, _targetContainer: string, _sourceEngine: string, _targetEngine: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Converting Prometheus to InfluxDB format...');
     
     setTimeout(() => {
@@ -671,8 +662,8 @@ async function migratePrometheusToInflux(sourceContainer: string, targetContaine
   });
 }
 
-async function migratePostgresToTimescale(sourceContainer: string, targetContainer: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migratePostgresToTimescale(_sourceContainer: string, _targetContainer: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Migrating PostgreSQL to TimescaleDB...');
     logMigrationStep('Creating hypertables...', 'Converting time-series tables');
     
@@ -683,8 +674,8 @@ async function migratePostgresToTimescale(sourceContainer: string, targetContain
   });
 }
 
-async function migrateMySQLToPostgres(sourceContainer: string, targetContainer: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migrateMySQLToPostgres(_sourceContainer: string, _targetContainer: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Migrating MariaDB/MySQL to PostgreSQL...');
     logMigrationStep('Converting data types...', 'Transforming SQL syntax');
     
@@ -695,8 +686,8 @@ async function migrateMySQLToPostgres(sourceContainer: string, targetContainer: 
   });
 }
 
-async function migrateRedisToTikv(sourceContainer: string, targetContainer: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migrateRedisToTikv(_sourceContainer: string, _targetContainer: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Migrating Redis to TiKV...');
     logMigrationStep('Converting Redis data structures...', 'Adapting to TiKV key-value model');
     
@@ -707,8 +698,8 @@ async function migrateRedisToTikv(sourceContainer: string, targetContainer: stri
   });
 }
 
-async function migrateCassandraToArango(sourceContainer: string, targetContainer: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function migrateCassandraToArango(_sourceContainer: string, _targetContainer: string): Promise<void> {
+  return new Promise((resolve, _reject) => {
     logMigrationStep('Migrating Cassandra to ArangoDB...');
     logMigrationStep('Converting wide column to document model...', 'Transforming data structure');
     

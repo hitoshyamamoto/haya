@@ -2,9 +2,11 @@ import { readFile, writeFile, access, mkdir, rm } from 'fs/promises';
 import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import { spawn } from 'child_process';
+import { spawn, SpawnOptions } from 'child_process';
 import chalk from 'chalk';
-import { DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
+import ora from 'ora';
+import { getTemplate, TEMPLATES } from './templates.js';
+import { DockerInstance, DatabaseInstance, DatabaseTemplate, ComposeFile, DockerService } from './types.js';
 import { getConfig, getComposeFilePath, getDataDirectory } from './config.js';
 import { allocatePort, deallocatePort } from './port-manager.js';
 
@@ -869,3 +871,24 @@ export const getAllDatabases = async (): Promise<DatabaseInstance[]> => {
   await manager.initialize();
   return manager.getAllInstances();
 };
+
+export async function executeDockerCommand(args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const process = spawn('docker', args);
+    
+    let stdout = '';
+    let _stderr = '';
+    
+    process.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    process.stderr.on('data', (data) => {
+      _stderr += data.toString();
+    });
+    
+    process.on('close', (code) => {
+      code === 0 ? resolve(stdout) : reject(new Error(`Docker command failed with code ${code}`));
+    });
+  });
+}

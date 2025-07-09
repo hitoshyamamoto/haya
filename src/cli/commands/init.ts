@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import ora from 'ora';
-import { getTemplate, getAvailableEngines, getAvailableTypes, getEnginesByType } from '../../core/templates.js';
+import { getTemplate, getAvailableTypes, getEnginesByType } from '../../core/templates.js';
 import { createDatabase } from '../../core/docker.js';
 import { InitOptions } from '../../core/types.js';
 

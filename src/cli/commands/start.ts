@@ -7,7 +7,7 @@ export const startCommand = new Command('start')
   .description('Start database instances')
   .argument('[name]', 'Database instance name (optional, starts all if not specified)')
   .option('-a, --all', 'Start all database instances')
-  .action(async (name?: string, options?) => {
+  .action(async (name: string, _options) => {
     try {
       const dockerManager = getDockerManager();
       await dockerManager.initialize();

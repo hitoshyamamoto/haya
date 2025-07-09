@@ -108,7 +108,7 @@ async function showSecurityPolicy(): Promise<void> {
 }
 
 async function showAuditLogs(): Promise<void> {
-  const securityManager = getSecurityManager();
+  const _securityManager = getSecurityManager();
   
   try {
     const fs = await import('fs/promises');
@@ -174,7 +174,7 @@ async function manageCredentials(): Promise<void> {
   ]);
   
   switch (action.action) {
-    case 'generate':
+    case 'generate': {
       const length = await inquirer.prompt([
         {
           type: 'number',
@@ -190,13 +190,15 @@ async function manageCredentials(): Promise<void> {
       console.log(chalk.bold(password));
       console.log(chalk.gray('\n💡 Copy this password immediately - it won\'t be shown again'));
       break;
+    }
       
-    case 'view':
+    case 'view': {
       console.log(chalk.yellow('\n⚠️  This feature requires accessing the encrypted credential store'));
       console.log(chalk.gray('For security reasons, passwords are never displayed in plain text'));
       break;
+    }
       
-    case 'update':
+    case 'update': {
       const { instanceName, newPassword } = await inquirer.prompt([
         {
           type: 'input',
@@ -228,11 +230,13 @@ async function manageCredentials(): Promise<void> {
         console.error(chalk.red('❌ Failed to update credentials:'), error);
       }
       break;
+    }
       
-    case 'remove':
+    case 'remove': {
       console.log(chalk.red('\n⚠️  Credential removal not yet implemented'));
       console.log(chalk.gray('This feature will be added in a future version'));
       break;
+    }
   }
 }
 

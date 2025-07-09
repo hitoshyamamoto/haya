@@ -132,8 +132,8 @@ ${chalk.bold('OPTIONS')}
 `;
     }
   })
-  .hook('preAction', (thisCommand) => {
-    if (!thisCommand.opts().quiet) {
+  .hook('preAction', async (_cmd, _helper) => {
+    if (!program.opts().quiet) {
       console.log(banner);
     }
   });

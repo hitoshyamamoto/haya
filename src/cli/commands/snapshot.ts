@@ -16,226 +16,228 @@ async function createSnapshotDirectory(dir: string): Promise<void> {
   }
 }
 
-async function executeSnapshot(
-  instance: any, 
-  snapshotPath: string, 
-  format: string,
-  compress: boolean
+async function createSnapshot(
+  instance: any,
+  snapshotPath: string,
+  _compress: boolean
 ): Promise<void> {
   const template = getTemplate(instance.engine);
   if (!template) {
     throw new Error(`Template not found for engine: ${instance.engine}`);
   }
 
-  // Database-specific backup commands
+  // Choose appropriate backup method based on database type
   switch (instance.engine) {
     case 'postgresql':
-      return executePostgreSQLSnapshot(instance, snapshotPath, format);
-    
+    case 'timescaledb':
+      await createPostgreSQLSnapshot(instance.name, snapshotPath);
+      break;
     case 'mariadb':
-      return executeMySQLSnapshot(instance, snapshotPath, format);
-    
+      await createMariaDBSnapshot(instance.name, snapshotPath);
+      break;
     case 'redis':
-      return executeRedisSnapshot(instance, snapshotPath, format);
-    
-    case 'sqlite':
-    case 'duckdb':
-      return executeSQLiteSnapshot(instance, snapshotPath, format);
-    
+      await createRedisSnapshot(instance.name, snapshotPath);
+      break;
     case 'influxdb2':
     case 'influxdb3':
-      return executeInfluxDBSnapshot(instance, snapshotPath, format);
-    
+      await createInfluxDBSnapshot(instance.name, snapshotPath);
+      break;
+    case 'cassandra':
+      await createCassandraSnapshot(instance.name, snapshotPath);
+      break;
     default:
-      return executeGenericSnapshot(instance, snapshotPath, format);
+      await createGenericSnapshot(instance.name, snapshotPath);
   }
 }
 
-async function executePostgreSQLSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
+async function createPostgreSQLSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sql'): Promise<void> {
   return new Promise((resolve, reject) => {
-    const args = [
-      'exec', containerName,
-      'pg_dump',
-      '-h', 'localhost',
-      '-U', 'admin',
-      '-d', 'database',
-      '--no-password',
-      '-f', '/tmp/backup.sql'
-    ];
+    const dumpProcess = spawn('docker', [
+      'exec', `${instanceName}-db`,
+      'pg_dump', '-U', 'postgres', '--clean', '--create'
+    ], { stdio: ['inherit', 'pipe', 'pipe'] });
 
-    const childProcess = spawn('docker', args, {
-      env: { ...process.env, PGPASSWORD: 'password' }
+    const writeStream = require('fs').createWriteStream(snapshotPath);
+    dumpProcess.stdout.pipe(writeStream);
+
+    dumpProcess.on('close', (code) => {
+      writeStream.end();
+      code === 0 ? resolve() : reject(new Error('PostgreSQL snapshot failed'));
     });
 
-    childProcess.on('close', (code: number) => {
-      if (code === 0) {
-        // Copy from container to host
-        const copyArgs = ['cp', `${containerName}:/tmp/backup.sql`, snapshotPath];
-        const copyProcess = spawn('docker', copyArgs);
-        
-        copyProcess.on('close', (copyCode: number) => {
-          if (copyCode === 0) {
-            resolve();
-          } else {
-            reject(new Error(`Failed to copy backup from container`));
-          }
-        });
-      } else {
-        reject(new Error(`pg_dump failed with code ${code}`));
-      }
-    });
+    dumpProcess.on('error', reject);
   });
 }
 
-async function executeMySQLSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
+async function createMariaDBSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sql'): Promise<void> {
   return new Promise((resolve, reject) => {
-    const args = [
-      'exec', containerName,
-      'mysqldump',
-      '-u', 'admin',
-      '-p' + 'password',
-      'database'
-    ];
+    const dumpProcess = spawn('docker', [
+      'exec', `${instanceName}-db`,
+      'mysqldump', '-u', 'root', '--all-databases'
+    ], { stdio: ['inherit', 'pipe', 'pipe'] });
 
-    const childProcess = spawn('docker', args);
-    
-    // Redirect output to file
-    const fileStream = require('fs').createWriteStream(snapshotPath);
-    childProcess.stdout.pipe(fileStream);
+    const writeStream = require('fs').createWriteStream(snapshotPath);
+    dumpProcess.stdout.pipe(writeStream);
 
-    childProcess.on('close', (code: number) => {
-      fileStream.end();
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`mysqldump failed with code ${code}`));
-      }
+    dumpProcess.on('close', (code) => {
+      writeStream.end();
+      code === 0 ? resolve() : reject(new Error('MariaDB snapshot failed'));
     });
+
+    dumpProcess.on('error', reject);
   });
 }
 
-async function executeRedisSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
+async function createRedisSnapshot(instanceName: string, snapshotPath: string, _format: string = 'rdb'): Promise<void> {
   return new Promise((resolve, reject) => {
     // Create RDB backup
-    const saveArgs = ['exec', containerName, 'redis-cli', 'BGSAVE'];
-    const saveProcess = spawn('docker', saveArgs);
+    const bgsaveProcess = spawn('docker', [
+      'exec', `${instanceName}-db`, 'redis-cli', 'BGSAVE'
+    ]);
 
-    saveProcess.on('close', (code: number) => {
-      if (code === 0) {
-        // Wait a bit for background save to complete
-        setTimeout(() => {
-          // Copy RDB file
-          const copyArgs = ['cp', `${containerName}:/data/dump.rdb`, snapshotPath];
-          const copyProcess = spawn('docker', copyArgs);
-          
-          copyProcess.on('close', (copyCode: number) => {
-            if (copyCode === 0) {
-              resolve();
-            } else {
-              reject(new Error(`Failed to copy Redis RDB file`));
-            }
-          });
-        }, 1000);
-      } else {
-        reject(new Error(`Redis BGSAVE failed with code ${code}`));
+    bgsaveProcess.on('close', async (code) => {
+      if (code !== 0) {
+        reject(new Error('Redis background save failed'));
+        return;
       }
+
+      // Wait for backup to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Copy RDB file
+      const copyProcess = spawn('docker', [
+        'cp', `${instanceName}-db:/data/dump.rdb`, snapshotPath
+      ]);
+
+      copyProcess.on('close', (copyCode) => {
+        copyCode === 0 ? resolve() : reject(new Error('Failed to copy Redis snapshot'));
+      });
+
+      copyProcess.on('error', reject);
     });
+
+    bgsaveProcess.on('error', reject);
   });
 }
 
-async function executeSQLiteSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
+async function createInfluxDBSnapshot(instanceName: string, snapshotPath: string, _format: string = 'backup'): Promise<void> {
   return new Promise((resolve, reject) => {
-    // For SQLite, just copy the database file
-    const copyArgs = ['cp', `${containerName}:/data/${instance.name}.db`, snapshotPath];
-    const copyProcess = spawn('docker', copyArgs);
-    
-    copyProcess.on('close', (code: number) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Failed to copy SQLite database file`));
+    const backupProcess = spawn('docker', [
+      'exec', `${instanceName}-db`,
+      'influx', 'backup', '/tmp/backup'
+    ]);
+
+    backupProcess.on('close', async (code) => {
+      if (code !== 0) {
+        reject(new Error('InfluxDB backup failed'));
+        return;
       }
-    });
-  });
-}
 
-async function executeInfluxDBSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
-  return new Promise((resolve, reject) => {
-    // InfluxDB backup (simplified - real implementation would use influx CLI)
-    const args = [
-      'exec', containerName,
-      'tar', '-czf', '/tmp/influx_backup.tar.gz', 
-      '/var/lib/influxdb2'
-    ];
+      // Create tar archive
+      const tarProcess = spawn('docker', [
+        'exec', `${instanceName}-db`,
+        'tar', '-czf', '/tmp/influx-backup.tar.gz', '/tmp/backup'
+      ]);
 
-    const childProcess = spawn('docker', args);
+      tarProcess.on('close', (tarCode) => {
+        if (tarCode !== 0) {
+          reject(new Error('Failed to create backup archive'));
+          return;
+        }
 
-    childProcess.on('close', (code: number) => {
-      if (code === 0) {
-        // Copy backup from container
-        const copyArgs = ['cp', `${containerName}:/tmp/influx_backup.tar.gz`, snapshotPath];
-        const copyProcess = spawn('docker', copyArgs);
-        
-        copyProcess.on('close', (copyCode: number) => {
-          if (copyCode === 0) {
-            resolve();
-          } else {
-            reject(new Error(`Failed to copy InfluxDB backup`));
-          }
+        // Copy to host
+        const copyProcess = spawn('docker', [
+          'cp', `${instanceName}-db:/tmp/influx-backup.tar.gz`, snapshotPath
+        ]);
+
+        copyProcess.on('close', (copyCode) => {
+          copyCode === 0 ? resolve() : reject(new Error('Failed to copy InfluxDB snapshot'));
         });
-      } else {
-        reject(new Error(`InfluxDB backup failed with code ${code}`));
-      }
+
+        copyProcess.on('error', reject);
+      });
+
+      tarProcess.on('error', reject);
     });
+
+    backupProcess.on('error', reject);
   });
 }
 
-async function executeGenericSnapshot(instance: any, snapshotPath: string, format: string): Promise<void> {
-  const containerName = `haya-${instance.name}-db-1`;
-  
+async function createGenericSnapshot(instanceName: string, snapshotPath: string, _format: string = 'tar'): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Generic backup - copy entire data directory
-    const args = [
-      'exec', containerName,
-      'tar', '-czf', '/tmp/generic_backup.tar.gz', '/data'
-    ];
+    const backupProcess = spawn('docker', [
+      'exec', `${instanceName}-db`,
+      'tar', '-czf', '/tmp/backup.tar.gz', '/data'
+    ]);
 
-    const childProcess = spawn('docker', args);
-
-    childProcess.on('close', (code: number) => {
-      if (code === 0) {
-        // Copy backup from container
-        const copyArgs = ['cp', `${containerName}:/tmp/generic_backup.tar.gz`, snapshotPath];
-        const copyProcess = spawn('docker', copyArgs);
-        
-        copyProcess.on('close', (copyCode: number) => {
-          if (copyCode === 0) {
-            resolve();
-          } else {
-            reject(new Error(`Failed to copy generic backup`));
-          }
-        });
-      } else {
-        reject(new Error(`Generic backup failed with code ${code}`));
+    backupProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error('Generic backup failed'));
+        return;
       }
+
+      const copyProcess = spawn('docker', [
+        'cp', `${instanceName}-db:/tmp/backup.tar.gz`, snapshotPath
+      ]);
+
+      copyProcess.on('close', (copyCode) => {
+        copyCode === 0 ? resolve() : reject(new Error('Failed to copy generic snapshot'));
+      });
+
+      copyProcess.on('error', reject);
     });
+
+    backupProcess.on('error', reject);
+  });
+}
+
+async function createCassandraSnapshot(instanceName: string, snapshotPath: string, _format: string = 'sstable'): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const snapshotProcess = spawn('docker', [
+      'exec', `${instanceName}-db`,
+      'nodetool', 'snapshot'
+    ]);
+
+    snapshotProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error('Cassandra snapshot failed'));
+        return;
+      }
+
+      const copyProcess = spawn('docker', [
+        'exec', `${instanceName}-db`,
+        'tar', '-czf', '/tmp/cassandra-snapshot.tar.gz', '/var/lib/cassandra/data'
+      ]);
+
+      copyProcess.on('close', (tarCode) => {
+        if (tarCode !== 0) {
+          reject(new Error('Failed to create Cassandra archive'));
+          return;
+        }
+
+        const finalCopyProcess = spawn('docker', [
+          'cp', `${instanceName}-db:/tmp/cassandra-snapshot.tar.gz`, snapshotPath
+        ]);
+
+        finalCopyProcess.on('close', (copyCode) => {
+          copyCode === 0 ? resolve() : reject(new Error('Failed to copy Cassandra snapshot'));
+        });
+
+        finalCopyProcess.on('error', reject);
+      });
+
+      copyProcess.on('error', reject);
+    });
+
+    snapshotProcess.on('error', reject);
   });
 }
 
 export const snapshotCommand = new Command('snapshot')
-  .description('Create a snapshot of a database instance')
+  .description('Create snapshots of database instances')
   .argument('<name>', 'Database instance name')
-  .option('-o, --output <path>', 'Output directory for snapshot')
+  .option('-o, --output <path>', 'Output directory for snapshots', './snapshots')
   .option('-c, --compress', 'Compress the snapshot')
   .option('--format <format>', 'Snapshot format (sql, rdb, tar)', 'sql')
   .action(async (name: string, options: SnapshotOptions) => {
@@ -246,16 +248,20 @@ export const snapshotCommand = new Command('snapshot')
       const instance = dockerManager.getInstance(name);
       if (!instance) {
         console.error(chalk.red(`❌ Database instance '${name}' not found`));
+        console.log(chalk.yellow('💡 Run `hayai list` to see available databases'));
         process.exit(1);
       }
 
-      // Check if database is running
       if (instance.status !== 'running') {
         console.error(chalk.red(`❌ Database '${name}' must be running to create snapshot`));
         console.log(chalk.yellow(`💡 Start it with: ${chalk.cyan(`hayai start ${name}`)}`));
         process.exit(1);
       }
 
+      // Create snapshots directory
+      await createSnapshotDirectory(options.output || './snapshots');
+
+      // Generate snapshot filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const snapshotName = `${name}-snapshot-${timestamp}`;
       const outputDir = options.output || path.join(process.cwd(), 'snapshots');
@@ -263,47 +269,32 @@ export const snapshotCommand = new Command('snapshot')
       // Determine file extension based on database type and format
       let extension = 'sql';
       if (instance.engine === 'redis') extension = 'rdb';
-      if (instance.engine === 'sqlite' || instance.engine === 'duckdb') extension = 'db';
+      if (instance.engine.includes('influx') || instance.engine === 'cassandra') extension = 'tar.gz';
       if (options.format === 'tar') extension = 'tar.gz';
       
       const snapshotPath = path.join(outputDir, `${snapshotName}.${extension}`);
 
       console.log(chalk.cyan(`📸 Creating snapshot of '${name}'...`));
-      console.log(chalk.gray(`Database: ${instance.engine}`));
+      console.log(chalk.gray(`Engine: ${instance.engine}`));
       console.log(chalk.gray(`Output: ${snapshotPath}`));
 
-      // Create snapshots directory
-      await createSnapshotDirectory(outputDir);
+      const spinner = ora('Creating snapshot...').start();
 
-      const spinner = ora(`Creating ${instance.engine} snapshot...`).start();
-
-      try {
-        await executeSnapshot(instance, snapshotPath, options.format || 'sql', options.compress || false);
-        spinner.succeed(`Snapshot created successfully`);
-      } catch (error) {
-        spinner.fail(`Snapshot creation failed`);
-        throw error;
-      }
+      await createSnapshot(instance, snapshotPath, options.compress || false);
 
       // Get file size
       const stats = await fs.stat(snapshotPath);
       const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-      console.log(chalk.green('\n✅ Snapshot created!'));
-      console.log(chalk.bold('Snapshot Details:'));
-      console.log(`  Name: ${chalk.cyan(snapshotName)}`);
-      console.log(`  Database: ${chalk.cyan(instance.name)} (${instance.engine})`);
-      console.log(`  Format: ${chalk.cyan(extension)}`);
-      console.log(`  Size: ${chalk.cyan(fileSizeMB + ' MB')}`);
-      console.log(`  Path: ${chalk.cyan(snapshotPath)}`);
+      spinner.succeed(`Snapshot created successfully (${fileSizeMB} MB)`);
 
-      console.log(chalk.yellow('\n💡 Next Steps:'));
-      console.log(`  • View snapshots: ${chalk.cyan('hayai snapshot list')}`);
-      console.log(`  • Restore snapshot: ${chalk.cyan(`hayai restore ${snapshotPath}`)}`);
-      console.log(`  • Share snapshot: Copy the file to another machine`);
+      console.log(chalk.green('\n✅ Snapshot completed!'));
+      console.log(chalk.yellow('💡 Commands:'));
+      console.log(`  • ${chalk.cyan('hayai snapshot list')} - View all snapshots`);
+      console.log(`  • ${chalk.cyan('hayai snapshot restore')} - Restore from snapshot`);
 
     } catch (error) {
-      console.error(chalk.red('\n❌ Failed to create snapshot:'), error instanceof Error ? error.message : error);
+      console.error(chalk.red('❌ Snapshot failed:'), error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });
@@ -312,7 +303,7 @@ export const snapshotCommand = new Command('snapshot')
 snapshotCommand
   .command('list')
   .description('List all available snapshots')
-  .option('-d, --directory <path>', 'Directory to search for snapshots', 'snapshots')
+  .option('-d, --directory <path>', 'Snapshots directory', './snapshots')
   .action(async (options) => {
     try {
       const snapshotsDir = path.resolve(options.directory);
@@ -321,31 +312,32 @@ snapshotCommand
         await fs.access(snapshotsDir);
       } catch {
         console.log(chalk.yellow(`📁 No snapshots directory found at: ${snapshotsDir}`));
-        console.log(chalk.gray(`💡 Create snapshots with: ${chalk.cyan('hayai snapshot <database-name>')}`));
+        console.log(chalk.gray('Create snapshots with: hayai snapshot <database-name>'));
         return;
       }
 
       const files = await fs.readdir(snapshotsDir);
       const snapshotFiles = files.filter(file => 
         file.includes('-snapshot-') && 
-        (file.endsWith('.sql') || file.endsWith('.rdb') || file.endsWith('.db') || file.endsWith('.tar.gz'))
+        (file.endsWith('.sql') || file.endsWith('.rdb') || file.endsWith('.tar.gz'))
       );
 
       if (snapshotFiles.length === 0) {
         console.log(chalk.yellow('📁 No snapshots found'));
-        console.log(chalk.gray(`💡 Create snapshots with: ${chalk.cyan('hayai snapshot <database-name>')}`));
+        console.log(chalk.gray('Create snapshots with: hayai snapshot <database-name>'));
         return;
       }
 
-      console.log(chalk.cyan('\n📸 Available Snapshots:\n'));
+      console.log(chalk.cyan('\n📋 Available Snapshots:\n'));
 
+      // Get detailed info for each snapshot
       const snapshots = await Promise.all(
         snapshotFiles.map(async (file) => {
           const filePath = path.join(snapshotsDir, file);
           const stats = await fs.stat(filePath);
           const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
           
-          // Parse snapshot info from filename
+          // Parse filename to extract info
           const parts = file.split('-snapshot-');
           const dbName = parts[0];
           const timestamp = parts[1]?.split('.')[0];
@@ -354,43 +346,40 @@ snapshotCommand
           return {
             file,
             dbName,
-            timestamp: timestamp ? new Date(timestamp.replace(/-/g, ':')).toLocaleString() : 'Unknown',
+            timestamp: timestamp ? new Date(timestamp.replace(/-/g, ':').replace(/T/, ' ')) : new Date(),
             size: sizeMB,
-            extension: extension.replace('.', ''),
-            path: filePath
+            extension
           };
         })
       );
 
-      // Sort by most recent first
-      snapshots.sort((a, b) => b.file.localeCompare(a.file));
+      // Sort by timestamp (newest first)
+      snapshots.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
-      snapshots.forEach((snapshot, index) => {
-        console.log(`${index + 1}. ${chalk.bold(snapshot.dbName)}`);
-        console.log(`   Format: ${chalk.cyan(snapshot.extension)}`);
-        console.log(`   Created: ${chalk.gray(snapshot.timestamp)}`);
-        console.log(`   Size: ${chalk.yellow(snapshot.size + ' MB')}`);
-        console.log(`   Path: ${chalk.gray(snapshot.path)}`);
+      snapshots.forEach(snapshot => {
+        console.log(`📸 ${chalk.bold(snapshot.file)}`);
+        console.log(`   Database: ${chalk.cyan(snapshot.dbName)}`);
+        console.log(`   Created:  ${chalk.gray(snapshot.timestamp.toLocaleString())}`);
+        console.log(`   Size:     ${chalk.yellow(snapshot.size)} MB`);
+        console.log(`   Format:   ${chalk.magenta(snapshot.extension.substring(1))}`);
         console.log('');
       });
 
       console.log(chalk.yellow('💡 Commands:'));
-      console.log(`  • Restore: ${chalk.cyan('hayai restore <snapshot-path>')}`);
-      console.log(`  • Clean old: ${chalk.cyan('hayai snapshot clean')}`);
+      console.log(`  • ${chalk.cyan('hayai snapshot <name>')} - Create new snapshot`);
+      console.log(`  • ${chalk.cyan('hayai snapshot restore <file>')} - Restore from snapshot`);
 
     } catch (error) {
       console.error(chalk.red('❌ Failed to list snapshots:'), error instanceof Error ? error.message : error);
-      process.exit(1);
     }
   });
 
-// Add subcommand for cleaning old snapshots
+// Add subcommand for removing old snapshots
 snapshotCommand
   .command('clean')
   .description('Remove old snapshots (keeps last 5 per database)')
-  .option('-d, --directory <path>', 'Directory to clean', 'snapshots')
-  .option('--keep <number>', 'Number of snapshots to keep per database', parseInt, 5)
-  .option('--dry-run', 'Show what would be deleted without actually deleting')
+  .option('-d, --directory <path>', 'Snapshots directory', './snapshots')
+  .option('-k, --keep <number>', 'Number of snapshots to keep per database', '5')
   .action(async (options) => {
     try {
       const snapshotsDir = path.resolve(options.directory);
@@ -405,7 +394,7 @@ snapshotCommand
       const files = await fs.readdir(snapshotsDir);
       const snapshotFiles = files.filter(file => 
         file.includes('-snapshot-') && 
-        (file.endsWith('.sql') || file.endsWith('.rdb') || file.endsWith('.db') || file.endsWith('.tar.gz'))
+        (file.endsWith('.sql') || file.endsWith('.rdb') || file.endsWith('.tar.gz'))
       );
 
       if (snapshotFiles.length === 0) {
@@ -414,7 +403,8 @@ snapshotCommand
       }
 
       // Group by database name
-      const snapshotsByDb: { [key: string]: string[] } = {};
+      const snapshotsByDb: Record<string, string[]> = {};
+      
       snapshotFiles.forEach(file => {
         const dbName = file.split('-snapshot-')[0];
         if (!snapshotsByDb[dbName]) {
@@ -423,50 +413,53 @@ snapshotCommand
         snapshotsByDb[dbName].push(file);
       });
 
-      const toDelete: string[] = [];
-      
-      Object.entries(snapshotsByDb).forEach(([dbName, snapshots]) => {
-        // Sort by newest first
-        snapshots.sort((a, b) => b.localeCompare(a));
+      const keepCount = parseInt(options.keep);
+      let totalDeleted = 0;
+
+      for (const [dbName, snapshots] of Object.entries(snapshotsByDb)) {
+        // Sort by timestamp (newest first)
+        snapshots.sort((a, b) => {
+          const timestampA = a.split('-snapshot-')[1]?.split('.')[0] || '';
+          const timestampB = b.split('-snapshot-')[1]?.split('.')[0] || '';
+          return timestampB.localeCompare(timestampA);
+        });
+
+        const toDelete = snapshots.slice(keepCount);
         
-        // Mark old ones for deletion
-        if (snapshots.length > options.keep) {
-          const oldSnapshots = snapshots.slice(options.keep);
-          toDelete.push(...oldSnapshots);
+        if (toDelete.length > 0) {
+          console.log(chalk.yellow(`🗑️  Cleaning ${dbName}: removing ${toDelete.length} old snapshots`));
+          
+          for (const file of toDelete) {
+            await fs.unlink(path.join(snapshotsDir, file));
+            console.log(chalk.gray(`   Deleted: ${file}`));
+            totalDeleted++;
+          }
         }
-      });
+      }
 
-      if (toDelete.length === 0) {
+      if (totalDeleted === 0) {
         console.log(chalk.green('✅ No old snapshots to clean'));
-        return;
+      } else {
+        console.log(chalk.green(`✅ Cleaned ${totalDeleted} old snapshots`));
       }
-
-      console.log(chalk.cyan(`🧹 Found ${toDelete.length} old snapshots to clean:`));
-      console.log('');
-
-      toDelete.forEach(file => {
-        const dbName = file.split('-snapshot-')[0];
-        console.log(`  ${chalk.red('×')} ${dbName}: ${chalk.gray(file)}`);
-      });
-
-      if (options.dryRun) {
-        console.log(chalk.yellow('\n🔍 Dry run mode - no files were deleted'));
-        console.log(chalk.gray(`💡 Run without --dry-run to actually delete these files`));
-        return;
-      }
-
-      console.log('');
-      const deletedCount = toDelete.length;
-      
-      for (const file of toDelete) {
-        await fs.unlink(path.join(snapshotsDir, file));
-      }
-
-      console.log(chalk.green(`✅ Cleaned ${deletedCount} old snapshots`));
-      console.log(chalk.gray(`💡 Kept the most recent ${options.keep} snapshots per database`));
 
     } catch (error) {
       console.error(chalk.red('❌ Failed to clean snapshots:'), error instanceof Error ? error.message : error);
-      process.exit(1);
     }
-  }); 
+  });
+
+async function showSnapshotDetails(_dbName: string, snapshotFile: string): Promise<void> {
+  try {
+    const stats = await fs.stat(snapshotFile);
+    const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
+    
+    console.log(chalk.cyan('\n📋 Snapshot Details:\n'));
+    console.log(`File: ${chalk.bold(path.basename(snapshotFile))}`);
+    console.log(`Size: ${chalk.yellow(sizeMB)} MB`);
+    console.log(`Created: ${chalk.gray(stats.birthtime.toLocaleString())}`);
+    console.log(`Modified: ${chalk.gray(stats.mtime.toLocaleString())}`);
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Failed to get snapshot details:'), error);
+  }
+} 

@@ -1,6 +1,5 @@
 import crypto from 'crypto';
-import { readFile, writeFile, access, mkdir } from 'fs/promises';
-import { constants } from 'fs';
+import { readFile, writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -221,7 +220,7 @@ export class SecurityManager {
   /**
    * Creates network isolation for operation
    */
-  public async createNetworkIsolation(instances: string[]): Promise<string> {
+  public async createNetworkIsolation(_instances: string[]): Promise<string> {
     const networkName = `hayai-op-${crypto.randomUUID().substring(0, 8)}`;
     
     return new Promise((resolve, reject) => {
@@ -358,7 +357,7 @@ export class SecurityManager {
     instanceName: string,
     operation: string
   ): Promise<string> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
     let success = false;
     let error: string | undefined;
     

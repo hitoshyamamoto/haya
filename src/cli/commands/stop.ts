@@ -7,7 +7,7 @@ export const stopCommand = new Command('stop')
   .description('Stop database instances')
   .argument('[name]', 'Database instance name (optional, stops all if not specified)')
   .option('-a, --all', 'Stop all database instances')
-  .action(async (name?: string, options?) => {
+  .action(async (name: string, _options) => {
     try {
       const dockerManager = getDockerManager();
       await dockerManager.initialize();
@@ -25,8 +25,7 @@ export const stopCommand = new Command('stop')
       }
 
       console.log(chalk.green('\n✅ Database(s) stopped!'));
-      console.log(chalk.yellow('💡 Run `hayai list` to see database status'));
-      console.log(chalk.yellow('💡 Run `hayai start` to restart databases'));
+      console.log(chalk.yellow('💡 Run `hayai list` to see current status'));
 
     } catch (error) {
       console.error(chalk.red('\n❌ Failed to stop database(s):'), error instanceof Error ? error.message : error);

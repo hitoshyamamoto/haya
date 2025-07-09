@@ -2,7 +2,7 @@ import { readFile, writeFile, access } from 'fs/promises';
 import { constants } from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import { HayaiDbConfig, DatabaseSpec, DatabaseInstance } from './types.js';
+import { HayaiDbConfig, DatabaseSpec } from './types.js';
 import { getDockerManager } from './docker.js';
 import { DatabaseTemplates } from './templates.js';
 

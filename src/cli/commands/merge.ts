@@ -93,7 +93,7 @@ async function mergePostgreSQL(sourceContainer: string, targetContainer: string)
     
     dumpProcess.stdout.pipe(restoreProcess.stdin);
     
-    restoreProcess.on('close', (code) => {
+    restoreProcess.on('close', (_code) => {
       // Accept some errors as conflicts are expected in merge
       resolve();
     });
@@ -119,7 +119,7 @@ async function mergeMariaDB(sourceContainer: string, targetContainer: string): P
     
     dumpProcess.stdout.pipe(restoreProcess.stdin);
     
-    restoreProcess.on('close', (code) => {
+    restoreProcess.on('close', (_code) => {
       resolve();
     });
     
@@ -142,16 +142,14 @@ async function mergeRedis(sourceContainer: string, targetContainer: string): Pro
       sourceKeys += data.toString();
     });
     
-    sourceKeysProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error('Failed to get Redis keys'));
+    sourceKeysProcess.on('close', (_code) => {
+      if (sourceKeys.trim().split('\n').filter(key => key.trim()).length === 0) {
+        resolve(); // No keys to copy
         return;
       }
       
-      const keys = sourceKeys.trim().split('\n').filter(key => key.trim());
-      
       // Copy keys with REPLACE to handle conflicts
-      Promise.all(keys.map(key => copyRedisKey(sourceContainer, targetContainer, key)))
+      Promise.all(sourceKeys.trim().split('\n').filter(key => key.trim()).map(key => copyRedisKey(sourceContainer, targetContainer, key)))
         .then(() => resolve())
         .catch(reject);
     });
@@ -171,8 +169,8 @@ async function copyRedisKey(fromContainer: string, toContainer: string, key: str
       dumpData += data.toString();
     });
     
-    copyProcess.on('close', (code) => {
-      if (code === 0 && dumpData.trim()) {
+    copyProcess.on('close', (_code) => {
+      if (dumpData.trim()) {
         // Restore with REPLACE
         const restoreProcess = spawn('docker', [
           'exec', toContainer, 'redis-cli', 'RESTORE', key, '0', dumpData.trim(), 'REPLACE'
@@ -199,8 +197,8 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
       'tar', '-czf', '/tmp/merge-backup.tar.gz', '/data'
     ]);
     
-    backupProcess.on('close', (code) => {
-      if (code !== 0) {
+    backupProcess.on('close', (_code) => {
+      if (backupProcess.exitCode !== 0) {
         reject(new Error('Failed to create merge backup'));
         return;
       }
@@ -210,8 +208,8 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
         'cp', `${sourceContainer}:/tmp/merge-backup.tar.gz`, '/tmp/hayai-merge.tar.gz'
       ]);
       
-      copyProcess.on('close', (copyCode) => {
-        if (copyCode !== 0) {
+      copyProcess.on('close', (_copyCode) => {
+        if (copyProcess.exitCode !== 0) {
           reject(new Error('Failed to copy merge data'));
           return;
         }
@@ -220,8 +218,8 @@ async function mergeGeneric(sourceContainer: string, targetContainer: string): P
           'cp', '/tmp/hayai-merge.tar.gz', `${targetContainer}:/tmp/merge-backup.tar.gz`
         ]);
         
-        restoreProcess.on('close', (restoreCode) => {
-          if (restoreCode === 0) {
+        restoreProcess.on('close', (_restoreCode) => {
+          if (restoreProcess.exitCode === 0) {
             // Extract with keep-newer-files to avoid overwriting
             const extractProcess = spawn('docker', [
               'exec', targetContainer,

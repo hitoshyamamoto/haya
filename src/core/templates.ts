@@ -1,4 +1,4 @@
-import { DatabaseEngine, DatabaseTemplate } from './types.js';
+import { DatabaseTemplate } from './types.js';
 
 export class DatabaseTemplates {
   private static templates: Map<string, DatabaseTemplate> = new Map();
