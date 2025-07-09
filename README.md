@@ -38,6 +38,39 @@ Fast, modern CLI tool for managing local SQL and NoSQL databases with Docker. Bu
 - 🔬 **Experimentation** - Try different databases quickly
 - 📚 **Learning** - Explore various database technologies
 
+## 🌟 Support & Community
+
+If you find Hayai useful, please consider giving us a ⭐ **Star** on GitHub! It helps us understand that people are using and appreciating the project, and motivates us to keep improving it.
+
+<div align="center">
+  <a href="https://github.com/hitoshyamamoto/hayai">
+    <img src="https://img.shields.io/github/stars/hitoshyamamoto/hayai?style=social" alt="GitHub stars">
+  </a>
+  <a href="https://github.com/hitoshyamamoto/hayai/fork">
+    <img src="https://img.shields.io/github/forks/hitoshyamamoto/hayai?style=social" alt="GitHub forks">
+  </a>
+</div>
+
+### 💬 Get Involved
+
+We're building Hayai to be the best database management tool for developers, and your input matters:
+
+- **🐛 Found a bug?** Report it in our [Issues](https://github.com/hitoshyamamoto/hayai/issues) section
+- **💡 Have an idea?** Share it in [Discussions](https://github.com/hitoshyamamoto/hayai/discussions)
+- **🚀 Want a new database?** Request it through [Feature Requests](https://github.com/hitoshyamamoto/hayai/issues/new?template=feature_request.md)
+- **📖 Need help?** Ask questions in [Discussions](https://github.com/hitoshyamamoto/hayai/discussions/categories/q-a)
+
+### 🤝 Contributing
+
+Hayai is open-source and welcomes contributions! Whether it's:
+- 🔧 Code improvements
+- 📝 Documentation updates  
+- 🐛 Bug reports
+- 💡 Feature suggestions
+- 🌐 Translations
+
+Check out our [Contributing Guide](CONTRIBUTING.md) to get started!
+
 ## ⚡ Quick Start
 
 ```bash

@@ -1,6 +1,6 @@
 {
   "name": "hayai-db",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "⚡ Instantly create and manage local databases with one command",
   "main": "dist/index.js",
